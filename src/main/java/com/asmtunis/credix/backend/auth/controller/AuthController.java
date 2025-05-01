@@ -6,11 +6,9 @@ import com.asmtunis.credix.backend.auth.dto.RegisterRequest;
 import com.asmtunis.credix.backend.auth.model.User;
 import com.asmtunis.credix.backend.auth.repository.UserRepository;
 import com.asmtunis.credix.backend.auth.service.JwtService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
@@ -29,9 +27,12 @@ public class AuthController {
 		if (userRepository.findByUsername(request.username).isPresent()) {
 			return "Username already taken.";
 		}
+
 		User newUser = new User();
 		newUser.setUsername(request.username);
 		newUser.setPassword(passwordEncoder.encode(request.password));
+		newUser.setRole(request.role);
+
 		userRepository.save(newUser);
 		return "User registered successfully!";
 	}
@@ -40,7 +41,12 @@ public class AuthController {
 	public AuthResponse login(@RequestBody LoginRequest request) {
 		return userRepository.findByUsername(request.username)
 						.filter(user -> passwordEncoder.matches(request.password, user.getPassword()))
-						.map(user -> new AuthResponse(jwtService.generateToken(user.getUsername())))
+						.map(user -> new AuthResponse(jwtService.generateToken(user)))
 						.orElseThrow(() -> new RuntimeException("Invalid username or password"));
+	}
+
+	@GetMapping("/logout")
+	public ResponseEntity<String> logout() {
+		return ResponseEntity.ok("You are logged out. Please delete your token client-side.");
 	}
 }
