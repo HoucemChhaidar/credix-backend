@@ -24,12 +24,12 @@ public class AuthController {
 
 	@PostMapping("/register")
 	public String register(@RequestBody RegisterRequest request) {
-		if (userRepository.findByUsername(request.username).isPresent()) {
-			return "Username already taken.";
+		if (userRepository.findByEmail(request.email).isPresent()) {
+			return "Email already taken.";
 		}
 
 		User newUser = new User();
-		newUser.setUsername(request.username);
+		newUser.setEmail(request.email);
 		newUser.setPassword(passwordEncoder.encode(request.password));
 		newUser.setRole(request.role);
 
@@ -39,10 +39,10 @@ public class AuthController {
 
 	@PostMapping("/login")
 	public AuthResponse login(@RequestBody LoginRequest request) {
-		return userRepository.findByUsername(request.username)
-						.filter(user -> passwordEncoder.matches(request.password, user.getPassword()))
-						.map(user -> new AuthResponse(jwtService.generateToken(user)))
-						.orElseThrow(() -> new RuntimeException("Invalid username or password"));
+		return userRepository.findByEmail(request.email)
+			.filter(user -> passwordEncoder.matches(request.password, user.getPassword()))
+			.map(user -> new AuthResponse(jwtService.generateToken(user)))
+			.orElseThrow(() -> new RuntimeException("Invalid email or password"));
 	}
 
 	@GetMapping("/logout")

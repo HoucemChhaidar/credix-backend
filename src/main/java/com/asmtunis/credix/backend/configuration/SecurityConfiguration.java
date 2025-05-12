@@ -19,12 +19,12 @@ public class SecurityConfiguration {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
-						.authorizeHttpRequests(auth -> auth
-										.requestMatchers("/auth/**").permitAll()
-										.requestMatchers("/admin/**").hasRole("ADMIN")
-										.anyRequest().authenticated()
-						)
-						.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+			.authorizeHttpRequests(auth -> auth
+				.requestMatchers("/auth/**").permitAll()
+				.requestMatchers("/admin/**").hasRole("ADMIN")
+				.anyRequest().authenticated()
+			)
+			.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 		return http.build();
 	}
 

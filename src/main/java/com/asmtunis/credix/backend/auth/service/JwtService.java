@@ -20,30 +20,30 @@ public class JwtService {
 	public String generateToken(User user) {
 		long expirationMs = 86_400_000;
 		return Jwts.builder()
-						.setSubject(user.getUsername())
-						.claim("role", user.getRole().name())
-						.setIssuedAt(new Date())
-						.setExpiration(new Date(System.currentTimeMillis() + expirationMs))
-						.signWith(getSignInKey())
-						.compact();
+			.setSubject(user.getEmail())
+			.claim("role", user.getRole().name())
+			.setIssuedAt(new Date())
+			.setExpiration(new Date(System.currentTimeMillis() + expirationMs))
+			.signWith(getSignInKey())
+			.compact();
 	}
 
-	public String extractUsername(String token) {
+	public String extractEmail(String token) {
 		return Jwts.parserBuilder()
-						.setSigningKey(getSignInKey())
-						.build()
-						.parseClaimsJws(token)
-						.getBody()
-						.getSubject();
+			.setSigningKey(getSignInKey())
+			.build()
+			.parseClaimsJws(token)
+			.getBody()
+			.getSubject();
 	}
 
 	public String extractRole(String token) {
 		return Jwts.parserBuilder()
-						.setSigningKey(getSignInKey())
-						.build()
-						.parseClaimsJws(token)
-						.getBody()
-						.get("role", String.class);
+			.setSigningKey(getSignInKey())
+			.build()
+			.parseClaimsJws(token)
+			.getBody()
+			.get("role", String.class);
 	}
 
 	public boolean isTokenValid(String token) {
