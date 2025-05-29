@@ -1,6 +1,6 @@
 package com.asmtunis.credix.backend.auth.repository;
 
-import com.asmtunis.credix.backend.auth.model.User;
+import com.asmtunis.credix.backend.auth.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

@@ -1,62 +1,73 @@
 package com.asmtunis.credix.backend.auth.controller;
 
-import com.asmtunis.credix.backend.auth.dto.AuthResponse;
-import com.asmtunis.credix.backend.auth.dto.LoginRequest;
-import com.asmtunis.credix.backend.auth.dto.RegisterRequest;
-import com.asmtunis.credix.backend.auth.model.User;
-import com.asmtunis.credix.backend.auth.repository.UserRepository;
-import com.asmtunis.credix.backend.auth.service.JwtService;
-import com.asmtunis.credix.backend.model.ApiResponse;
+import com.asmtunis.credix.backend.auth.dto.request.LoginRequest;
+import com.asmtunis.credix.backend.auth.dto.request.RegisterRequest;
+import com.asmtunis.credix.backend.auth.dto.response.AuthResponse;
+import com.asmtunis.credix.backend.auth.dto.response.UserResponse;
+import com.asmtunis.credix.backend.auth.service.AuthService;
+import com.asmtunis.credix.backend.common.dto.ResponseWrapper;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
-	private final UserRepository userRepository;
-	private final JwtService jwtService;
-	private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+	private final AuthService authService;
 
-	public AuthController(UserRepository userRepository, JwtService jwtService) {
-		this.userRepository = userRepository;
-		this.jwtService = jwtService;
+	public AuthController(AuthService authService) {
+		this.authService = authService;
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<ApiResponse<String>> register(@RequestBody RegisterRequest request) {
-		if (userRepository.findByEmail(request.email).isPresent()) {
-			ApiResponse<String> response = new ApiResponse<>("Email already taken.", HttpStatus.BAD_REQUEST.value(), null);
+	public ResponseEntity<ResponseWrapper<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
+		if (authService.isEmailTaken(request.getEmail())) {
+			ResponseWrapper<UserResponse> response = new ResponseWrapper<>(
+					HttpStatus.BAD_REQUEST.value(),
+					"Email already taken.",
+					null
+			);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
 		}
 
-		User newUser = new User();
-		newUser.setEmail(request.email);
-		newUser.setPassword(passwordEncoder.encode(request.password));
-		newUser.setRole(request.role);
-
-		userRepository.save(newUser);
-
-		ApiResponse<String> response = new ApiResponse<>("User registered successfully!", HttpStatus.OK.value(), "Registered");
+		UserResponse userResponse = authService.register(request);
+		ResponseWrapper<UserResponse> response = new ResponseWrapper<>(
+				HttpStatus.OK.value(),
+				"User registered successfully!",
+				userResponse
+		);
 		return ResponseEntity.ok(response);
 	}
 
 	@PostMapping("/login")
-	public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
-		return userRepository.findByEmail(request.email).filter(user -> passwordEncoder.matches(request.password, user.getPassword())).map(user -> {
-			AuthResponse authResponse = new AuthResponse(jwtService.generateToken(user));
-			ApiResponse<AuthResponse> response = new ApiResponse<>("Login successful", HttpStatus.OK.value(), authResponse);
-			return ResponseEntity.ok(response);
-		}).orElseGet(() -> {
-			ApiResponse<AuthResponse> error = new ApiResponse<>("Invalid email or password", HttpStatus.UNAUTHORIZED.value(), null);
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
-		});
+	public ResponseEntity<ResponseWrapper<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
+		return authService.login(request)
+				.map(authResponse -> {
+					ResponseWrapper<AuthResponse> response = new ResponseWrapper<>(
+							HttpStatus.OK.value(),
+							"Login successful",
+							authResponse
+					);
+					return ResponseEntity.ok(response);
+				})
+				.orElseGet(() -> {
+					ResponseWrapper<AuthResponse> error = new ResponseWrapper<>(
+							HttpStatus.UNAUTHORIZED.value(),
+							"Invalid email or password",
+							null
+					);
+					return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+				});
 	}
 
 	@GetMapping("/logout")
-	public ResponseEntity<ApiResponse<String>> logout() {
-		ApiResponse<String> response = new ApiResponse<>("You are logged out. Please delete your token client-side.", HttpStatus.OK.value(), "Logged out");
+	public ResponseEntity<ResponseWrapper<String>> logout() {
+		ResponseWrapper<String> response = new ResponseWrapper<>(
+				HttpStatus.OK.value(),
+				"You are logged out. Please delete your token client-side.",
+				"Logged out"
+		);
 		return ResponseEntity.ok(response);
 	}
 }
