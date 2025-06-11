@@ -27,10 +27,6 @@ public class Wallet {
 	@JoinColumn(name = "user_id", nullable = false, unique = true)
 	private User user;
 
-	@ManyToOne
-	@JoinColumn(name = "corporate_id", nullable = false)
-	private User corporate;
-
 	@CreationTimestamp
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
@@ -79,14 +75,6 @@ public class Wallet {
 
 	public void setUser(User user) {
 		this.user = user;
-	}
-
-	public User getCorporate() {
-		return corporate;
-	}
-
-	public void setCorporate(User corporate) {
-		this.corporate = corporate;
 	}
 
 	public LocalDateTime getCreatedAt() {

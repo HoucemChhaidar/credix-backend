@@ -23,60 +23,47 @@ public class User {
 	@Column(nullable = false)
 	private Role role;
 
+	@ManyToOne
+	@JoinColumn(name = "corporate_id")
+	private User corporate;
+
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
 	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
-	public User() {
+	public User() {}
+
+	public User getCorporate() {
+		return corporate;
 	}
 
-	public Long getId() {
-		return id;
+	public void setCorporate(User corporate) {
+		this.corporate = corporate;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+	public Long getId() {return id;}
 
-	public String getEmail() {
-		return email;
-	}
+	public void setId(Long id) {this.id = id;}
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+	public String getEmail() {return email;}
 
-	public String getPassword() {
-		return password;
-	}
+	public void setEmail(String email) {this.email = email;}
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+	public String getPassword() {return password;}
 
-	public Role getRole() {
-		return role;
-	}
+	public void setPassword(String password) {this.password = password;}
 
-	public void setRole(Role role) {
-		this.role = role;
-	}
+	public Role getRole() {return role;}
 
-	public LocalDateTime getCreatedAt() {
-		return createdAt;
-	}
+	public void setRole(Role role) {this.role = role;}
 
-	public void setCreatedAt(LocalDateTime createdAt) {
-		this.createdAt = createdAt;
-	}
+	public LocalDateTime getCreatedAt() {return createdAt;}
 
-	public LocalDateTime getUpdatedAt() {
-		return updatedAt;
-	}
+	public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
 
-	public void setUpdatedAt(LocalDateTime updatedAt) {
-		this.updatedAt = updatedAt;
-	}
+	public LocalDateTime getUpdatedAt() {return updatedAt;}
+
+	public void setUpdatedAt(LocalDateTime updatedAt) {this.updatedAt = updatedAt;}
 }
