@@ -6,15 +6,13 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public class RegisterRequest {
-	@NotBlank(message = "Email is required")
-	@Email(message = "Invalid email format")
-	private String email;
+	@NotBlank(message = "Email is required") @Email(message = "Invalid email format") private String email;
 
-	@NotBlank(message = "Password is required")
-	private String password;
+	@NotBlank(message = "Password is required") private String password;
 
-	@NotNull(message = "Role is required")
-	private Role role;
+	@NotNull(message = "Role is required") private Role role;
+
+	private Long corporateId;
 
 	public String getEmail() {
 		return email;
@@ -38,5 +36,13 @@ public class RegisterRequest {
 
 	public void setRole(Role role) {
 		this.role = role;
+	}
+
+	public Long getCorporateId() {
+		return corporateId;
+	}
+
+	public void setCorporateId(Long corporateId) {
+		this.corporateId = corporateId;
 	}
 }

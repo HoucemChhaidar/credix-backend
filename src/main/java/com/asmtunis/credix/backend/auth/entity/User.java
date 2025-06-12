@@ -1,6 +1,7 @@
 package com.asmtunis.credix.backend.auth.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Check;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -8,6 +9,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
+@Check(constraints = "role = 'CORPORATE' OR corporate_id IS NOT NULL")
 public class User {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)

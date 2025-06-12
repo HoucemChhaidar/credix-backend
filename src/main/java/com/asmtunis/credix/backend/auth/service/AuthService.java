@@ -4,6 +4,7 @@ import com.asmtunis.credix.backend.auth.dto.request.LoginRequest;
 import com.asmtunis.credix.backend.auth.dto.request.RegisterRequest;
 import com.asmtunis.credix.backend.auth.dto.response.AuthResponse;
 import com.asmtunis.credix.backend.auth.dto.response.UserResponse;
+import com.asmtunis.credix.backend.auth.entity.Role;
 import com.asmtunis.credix.backend.auth.entity.User;
 import com.asmtunis.credix.backend.auth.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -32,6 +33,21 @@ public class AuthService {
 		newUser.setEmail(request.getEmail());
 		newUser.setPassword(passwordEncoder.encode(request.getPassword()));
 		newUser.setRole(request.getRole());
+
+		if (request.getRole() != Role.CORPORATE) {
+			if (request.getCorporateId() == null) {
+				throw new RuntimeException("Corporate ID is required for non-corporate users");
+			}
+
+			User corporate = userRepository.findById(request.getCorporateId())
+					.orElseThrow(() -> new RuntimeException("Corporate not found"));
+
+			if (corporate.getRole() != Role.CORPORATE) {
+				throw new RuntimeException("Specified user is not a corporate");
+			}
+
+			newUser.setCorporate(corporate);
+		}
 
 		User savedUser = userRepository.save(newUser);
 		return new UserResponse(savedUser);

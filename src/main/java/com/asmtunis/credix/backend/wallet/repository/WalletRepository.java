@@ -9,14 +9,18 @@ import java.util.List;
 import java.util.Optional;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
+	// Keep email method for JWT authentication
 	Optional<Wallet> findByUserEmail(String email);
+
+	// Add ID-based methods
+	Optional<Wallet> findByUserId(Long userId);
 
 	Optional<Wallet> findByTokenizedId(String tokenizedId);
 
 	List<Wallet> findByIsActiveTrue();
 
-	boolean existsByUserEmail(String email);
+	boolean existsByUserId(Long userId);
 
-	@Query("SELECT w FROM Wallet w WHERE w.user.corporate.email = :corporateEmail")
-	List<Wallet> findByUserCorporateEmail(@Param("corporateEmail") String corporateEmail);
+	@Query("SELECT w FROM Wallet w WHERE w.user.corporate.id = :corporateId")
+	List<Wallet> findByUserCorporateId(@Param("corporateId") Long corporateId);
 }
