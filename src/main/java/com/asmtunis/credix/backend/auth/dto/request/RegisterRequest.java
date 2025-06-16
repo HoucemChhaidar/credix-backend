@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import java.util.UUID;
+
 public class RegisterRequest {
 	@NotBlank(message = "Email is required") @Email(message = "Invalid email format") private String email;
 
@@ -12,7 +14,7 @@ public class RegisterRequest {
 
 	@NotNull(message = "Role is required") private Role role;
 
-	private Long corporateId;
+	private UUID corporateId;
 
 	public String getEmail() {
 		return email;
@@ -38,11 +40,11 @@ public class RegisterRequest {
 		this.role = role;
 	}
 
-	public Long getCorporateId() {
+	public UUID getCorporateId() {
 		return corporateId;
 	}
 
-	public void setCorporateId(Long corporateId) {
+	public void setCorporateId(UUID corporateId) {
 		this.corporateId = corporateId;
 	}
 }

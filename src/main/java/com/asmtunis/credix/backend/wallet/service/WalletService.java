@@ -60,7 +60,7 @@ public class WalletService {
 	 * Get wallet by user ID
 	 */
 	@Transactional(readOnly = true)
-	public WalletResponse getWalletByUserId(Long userId) {
+	public WalletResponse getWalletByUserId(UUID userId) {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 		return new WalletResponse(wallet);
@@ -121,7 +121,7 @@ public class WalletService {
 	 * Get balance by user ID
 	 */
 	@Transactional(readOnly = true)
-	public Double getBalanceByUserId(Long userId) {
+	public Double getBalanceByUserId(UUID userId) {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 		return wallet.getBalance();
@@ -140,7 +140,7 @@ public class WalletService {
 	/**
 	 * Deduct credit from wallet (for payments)
 	 */
-	public WalletResponse deductCredit(Long userId, Double amount, String description) {
+	public WalletResponse deductCredit(UUID userId, Double amount, String description) {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 
@@ -156,7 +156,7 @@ public class WalletService {
 	/**
 	 * Activate/Deactivate wallet
 	 */
-	public WalletResponse toggleWalletStatus(Long userId, Boolean isActive, String corporateEmail) {
+	public WalletResponse toggleWalletStatus(UUID userId, Boolean isActive, String corporateEmail) {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 
@@ -199,7 +199,7 @@ public class WalletService {
 	/**
 	 * Transfer credit between wallets (within same corporate)
 	 */
-	public void transferCredit(Long fromUserId, Long toUserId, Double amount, String corporateEmail) {
+	public void transferCredit(UUID fromUserId, UUID toUserId, Double amount, String corporateEmail) {
 		// Find both wallets
 		Wallet fromWallet = walletRepository.findByUserId(fromUserId)
 				.orElseThrow(() -> new RuntimeException("Source wallet not found for user ID: " + fromUserId));

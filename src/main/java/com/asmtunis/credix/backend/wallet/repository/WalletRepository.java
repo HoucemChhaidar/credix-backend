@@ -7,20 +7,21 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
-public interface WalletRepository extends JpaRepository<Wallet, Long> {
+public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 	// Keep email method for JWT authentication
 	Optional<Wallet> findByUserEmail(String email);
 
 	// Add ID-based methods
-	Optional<Wallet> findByUserId(Long userId);
+	Optional<Wallet> findByUserId(UUID userId);
 
 	Optional<Wallet> findByTokenizedId(String tokenizedId);
 
 	List<Wallet> findByIsActiveTrue();
 
-	boolean existsByUserId(Long userId);
+	boolean existsByUserId(UUID userId);
 
 	@Query("SELECT w FROM Wallet w WHERE w.user.corporate.id = :corporateId")
-	List<Wallet> findByUserCorporateId(@Param("corporateId") Long corporateId);
+	List<Wallet> findByUserCorporateId(@Param("corporateId") UUID corporateId);
 }

@@ -21,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/wallets")
@@ -114,7 +115,7 @@ public class WalletController {
 	public ResponseEntity<ResponseWrapper<WalletResponse>> getWalletByUserId(
 			@PathVariable
 			@Parameter(description = "User ID to retrieve wallet for", example = "123")
-			Long userId,
+			UUID userId,
 			Authentication authentication) {
 		try {
 			WalletResponse walletResponse = walletService.getWalletByUserId(userId);
@@ -302,7 +303,7 @@ public class WalletController {
 	public ResponseEntity<ResponseWrapper<Double>> getBalanceByUserId(
 			@PathVariable
 			@Parameter(description = "User ID to get balance for", example = "123")
-			Long userId) {
+			UUID userId) {
 		try {
 			Double balance = walletService.getBalanceByUserId(userId);
 
@@ -398,7 +399,7 @@ public class WalletController {
 	public ResponseEntity<ResponseWrapper<WalletResponse>> deductCredit(
 			@PathVariable
 			@Parameter(description = "User ID to deduct credit from", example = "123")
-			Long userId,
+			UUID userId,
 			@RequestParam
 			@Parameter(description = "Amount to deduct", example = "25.50")
 			Double amount,
@@ -455,7 +456,7 @@ public class WalletController {
 	public ResponseEntity<ResponseWrapper<WalletResponse>> toggleWalletStatus(
 			@PathVariable
 			@Parameter(description = "User ID to toggle wallet status for", example = "123")
-			Long userId,
+			UUID userId,
 			@RequestParam
 			@Parameter(description = "New wallet status", example = "true")
 			Boolean isActive,
@@ -594,10 +595,10 @@ public class WalletController {
 	public ResponseEntity<ResponseWrapper<String>> transferCredit(
 			@RequestParam
 			@Parameter(description = "Source user ID to transfer from", example = "123")
-			Long fromUserId,
+			UUID fromUserId,
 			@RequestParam
 			@Parameter(description = "Destination user ID to transfer to", example = "456")
-			Long toUserId,
+			UUID toUserId,
 			@RequestParam
 			@Parameter(description = "Amount to transfer", example = "50.00")
 			Double amount,
