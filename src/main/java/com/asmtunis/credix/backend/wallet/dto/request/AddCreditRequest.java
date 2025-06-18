@@ -7,7 +7,6 @@ import java.util.UUID;
 
 public class AddCreditRequest {
 	@NotNull(message = "User ID is required")
-	@Positive(message = "User ID must be positive")
 	private UUID userId;
 
 	@NotNull(message = "Amount is required")
