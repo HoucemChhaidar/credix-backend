@@ -1,6 +1,6 @@
 package com.asmtunis.credix.backend.configuration;
 
-import com.asmtunis.credix.backend.auth.security.JwtAuthenticationFilter;
+import com.asmtunis.credix.backend.features.auth.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
