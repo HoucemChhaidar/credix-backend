@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
@@ -32,7 +33,7 @@ public class TransactionController {
 	}
 
 	@PostMapping("/barcode/generate")
-	@PreAuthorize("hasAuthority('END_USER')")
+	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "Generate time-bound barcode", description = "Generate a 30-second expiry barcode for payment")
 	public ResponseEntity<ResponseWrapper<BarcodeResponse>> generateBarcode(
 			@Valid @RequestBody GenerateBarcodeRequest request,
@@ -42,14 +43,14 @@ public class TransactionController {
 			String userEmail = authentication.getName();
 			BarcodeResponse response = transactionService.generateBarcode(request, userEmail);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Barcode generated successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));
@@ -64,14 +65,14 @@ public class TransactionController {
 		try {
 			TransactionResponse response = transactionService.processPayment(request);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Payment processed successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));
@@ -87,14 +88,14 @@ public class TransactionController {
 		try {
 			TransactionResponse response = transactionService.getTransactionById(transactionId);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Transaction retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.NOT_FOUND)
+			return ResponseEntity.status(HttpStatus.NOT_FOUND)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.NOT_FOUND.value(),
+							HttpStatus.NOT_FOUND.value(),
 							e.getMessage(),
 							null
 					));
@@ -102,7 +103,7 @@ public class TransactionController {
 	}
 
 	@GetMapping("/history")
-	@PreAuthorize("hasAuthority('END_USER')")
+	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "Get user transaction history", description = "Get all transactions for the authenticated user")
 	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getUserHistory(
 			Authentication authentication
@@ -111,14 +112,14 @@ public class TransactionController {
 			String userEmail = authentication.getName();
 			List<TransactionResponse> response = transactionService.getUserTransactionHistory(userEmail);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Transaction history retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));
@@ -135,14 +136,14 @@ public class TransactionController {
 			String corporateEmail = authentication.getName();
 			List<TransactionResponse> response = transactionService.getCorporateTransactionHistory(corporateEmail);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Corporate transaction history retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));
@@ -159,14 +160,14 @@ public class TransactionController {
 		try {
 			List<TransactionResponse> response = transactionService.getTransactionsByDateRange(startDate, endDate);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Transactions retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));
@@ -174,21 +175,21 @@ public class TransactionController {
 	}
 
 	@GetMapping("/stats/total-spent")
-	@PreAuthorize("hasAuthority('END_USER')")
+	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "Get total spent", description = "Get total amount spent by the user")
 	public ResponseEntity<ResponseWrapper<Double>> getTotalSpent(Authentication authentication) {
 		try {
 			String userEmail = authentication.getName();
 			Double totalSpent = transactionService.getTotalSpentByUser(userEmail);
 			return ResponseEntity.ok(new ResponseWrapper<>(
-					org.springframework.http.HttpStatus.OK.value(),
+					HttpStatus.OK.value(),
 					"Total spent retrieved successfully",
 					totalSpent
 			));
 		} catch (RuntimeException e) {
-			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body(new ResponseWrapper<>(
-							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							HttpStatus.BAD_REQUEST.value(),
 							e.getMessage(),
 							null
 					));

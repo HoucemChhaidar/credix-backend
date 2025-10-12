@@ -44,7 +44,6 @@ public class TransactionResponse {
 		this.completedAt = transaction.getCompletedAt();
 	}
 
-	// Getters and Setters
 	public Long getId() {
 		return id;
 	}

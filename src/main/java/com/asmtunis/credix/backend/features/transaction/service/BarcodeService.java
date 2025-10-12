@@ -3,9 +3,10 @@ package com.asmtunis.credix.backend.features.transaction.service;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Base64;
-import java.util.UUID;
 
 @Service
 public class BarcodeService {
@@ -16,22 +17,19 @@ public class BarcodeService {
 
 	/**
 	 * Generate a time-bound barcode with Code128 format
-	 * Format: ASM-PAY|{walletTokenId}|{amount}|{timestamp}|{randomToken}
+	 * Format: ASM-PAY|{walletTokenId}|{timestamp}|{randomToken}
 	 */
-	public String generateBarcode(String walletTokenId, Double amount, String transactionId) {
+	public String generateBarcode(String walletTokenId) {
 		long timestamp = System.currentTimeMillis();
 		String randomToken = generateRandomToken();
 
-		// Format: ASM-PAY|walletId|amount|timestamp|randomToken
-		String barcodeData = String.format("%s|%s|%.3f|%d|%s",
+		String barcodeData = String.format("%s|%s|%d|%s",
 				BARCODE_PREFIX,
 				walletTokenId,
-				amount,
 				timestamp,
 				randomToken
 		);
 
-		// Encode to Base64 for Code128 compatibility
 		return Base64.getEncoder().encodeToString(barcodeData.getBytes());
 	}
 
@@ -43,27 +41,20 @@ public class BarcodeService {
 			return false;
 		}
 
-		// Check if barcode has expired
 		if (LocalDateTime.now().isAfter(barcodeExpiry)) {
 			return false;
 		}
 
 		try {
-			// Decode and validate format
+
 			String decoded = new String(Base64.getDecoder().decode(barcodeData));
 			String[] parts = decoded.split("\\|");
 
-			// Must have 5 parts: prefix|walletId|amount|timestamp|randomToken
-			if (parts.length != 5) {
+			if (parts.length != 4) {
 				return false;
 			}
 
-			// Validate prefix
-			if (!BARCODE_PREFIX.equals(parts[0])) {
-				return false;
-			}
-
-			return true;
+			return BARCODE_PREFIX.equals(parts[0]);
 		} catch (Exception e) {
 			return false;
 		}
@@ -78,7 +69,7 @@ public class BarcodeService {
 			String[] parts = decoded.split("\\|");
 
 			if (parts.length >= 2) {
-				return parts[1]; // Wallet token ID is the second part
+				return parts[1];
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Invalid barcode format");
@@ -88,21 +79,27 @@ public class BarcodeService {
 	}
 
 	/**
-	 * Extract amount from barcode
+	 * Extract barcode expiry time from the barcode data
+	 * Reads the timestamp from barcode and adds 30 seconds
 	 */
-	public Double extractAmount(String barcodeData) {
+	public LocalDateTime extractBarcodeExpiry(String barcodeData) {
 		try {
 			String decoded = new String(Base64.getDecoder().decode(barcodeData));
 			String[] parts = decoded.split("\\|");
 
 			if (parts.length >= 3) {
-				return Double.parseDouble(parts[2]); // Amount is the third part
+				long timestamp = Long.parseLong(parts[2]);
+				LocalDateTime generatedAt = LocalDateTime.ofInstant(
+						Instant.ofEpochMilli(timestamp),
+						ZoneId.systemDefault()
+				);
+				return generatedAt.plusSeconds(BARCODE_EXPIRY_SECONDS);
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("Invalid barcode format");
+			throw new RuntimeException("Invalid barcode format: " + e.getMessage());
 		}
 
-		throw new RuntimeException("Could not extract amount from barcode");
+		throw new RuntimeException("Could not extract expiry from barcode");
 	}
 
 	/**

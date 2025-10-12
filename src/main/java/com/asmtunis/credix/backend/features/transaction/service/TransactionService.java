@@ -5,6 +5,7 @@ import com.asmtunis.credix.backend.features.auth.repository.UserRepository;
 import com.asmtunis.credix.backend.features.transaction.dto.request.GenerateBarcodeRequest;
 import com.asmtunis.credix.backend.features.transaction.dto.request.ProcessPaymentRequest;
 import com.asmtunis.credix.backend.features.transaction.dto.response.BarcodeResponse;
+import com.asmtunis.credix.backend.features.transaction.dto.response.TransactionNotification;
 import com.asmtunis.credix.backend.features.transaction.dto.response.TransactionResponse;
 import com.asmtunis.credix.backend.features.transaction.entity.Transaction;
 import com.asmtunis.credix.backend.features.transaction.entity.TransactionStatus;
@@ -14,6 +15,8 @@ import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
 import com.asmtunis.credix.backend.features.wallet.repository.WalletRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,26 +27,31 @@ import java.util.stream.Collectors;
 @Transactional
 public class TransactionService {
 
+	private static final Logger logger = LoggerFactory.getLogger(TransactionService.class);
+
 	private final TransactionRepository transactionRepository;
 	private final WalletRepository walletRepository;
 	private final UserRepository userRepository;
 	private final BarcodeService barcodeService;
+	private final WebSocketNotificationService notificationService;
 
 	public TransactionService(
 			TransactionRepository transactionRepository,
 			WalletRepository walletRepository,
 			UserRepository userRepository,
-			BarcodeService barcodeService
+			BarcodeService barcodeService,
+			WebSocketNotificationService notificationService
 	) {
 		this.transactionRepository = transactionRepository;
 		this.walletRepository = walletRepository;
 		this.userRepository = userRepository;
 		this.barcodeService = barcodeService;
+		this.notificationService = notificationService;
 	}
 
 	/**
 	 * Generate a time-bound barcode for payment (30-second expiry)
-	 * Removed transaction creation - only generates barcode token for Flutter to display
+	 * Only generates barcode token - no amount needed from user
 	 */
 	public BarcodeResponse generateBarcode(GenerateBarcodeRequest request, String userEmail) {
 		// Find user and wallet
@@ -58,52 +66,52 @@ public class TransactionService {
 			throw new RuntimeException("Wallet is not active");
 		}
 
-		// Check sufficient balance
-		if (wallet.getBalance() < request.getAmount()) {
-			throw new RuntimeException("Insufficient balance. Current balance: " + wallet.getBalance());
-		}
-
-		String barcodeData = barcodeService.generateBarcode(
-				wallet.getTokenizedId(),
-				request.getAmount(),
-				null // No transaction ID needed at this stage
-		);
+		// Generate barcode with only wallet identifier
+		String barcodeData = barcodeService.generateBarcode(wallet.getTokenizedId());
 		LocalDateTime barcodeExpiry = barcodeService.getBarcodeExpiry();
 
 		return new BarcodeResponse(
-				null, // No transaction ID yet
 				barcodeData,
 				barcodeExpiry,
-				request.getAmount(),
-				request.getDescription(),
 				barcodeService.getExpirySeconds()
 		);
 	}
 
 	/**
 	 * Process payment from POS terminal (ASM integration)
-	 * Now creates the transaction when payment is actually processed
+	 * POS provides the amount - backend validates balance and processes payment
 	 */
 	public TransactionResponse processPayment(ProcessPaymentRequest request) {
-		if (!barcodeService.isBarcodeValid(request.getBarcodeData(), request.getBarcodeExpiry())) {
+		logger.info("========================================");
+		logger.info("PAYMENT PROCESSING STARTED");
+		logger.info("Barcode: {}", request.getBarcodeData());
+		logger.info("Amount: {}", request.getAmount());
+		logger.info("========================================");
+
+		LocalDateTime barcodeExpiry = barcodeService.extractBarcodeExpiry(request.getBarcodeData());
+
+		if (!barcodeService.isBarcodeValid(request.getBarcodeData(), barcodeExpiry)) {
+			logger.error("✗ Barcode validation failed - expired or invalid");
 			throw new RuntimeException("Barcode has expired or is invalid");
 		}
 
+		logger.info("✓ Barcode validated successfully");
+
 		String walletTokenId = barcodeService.extractWalletTokenId(request.getBarcodeData());
-		Double barcodeAmount = barcodeService.extractAmount(request.getBarcodeData());
 
 		Wallet wallet = walletRepository.findByTokenizedId(walletTokenId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for barcode"));
 
-		// Validate amount matches
-		if (!barcodeAmount.equals(request.getAmount())) {
-			throw new RuntimeException("Payment amount does not match barcode amount");
-		}
+		logger.info("✓ Wallet found - User: {}", wallet.getUser().getEmail());
+		logger.info("Checking balance - Current: {}, Required: {}", wallet.getBalance(), request.getAmount());
 
-		// Check sufficient balance
+		// Check sufficient balance (amount comes from POS)
 		if (wallet.getBalance() < request.getAmount()) {
+			logger.error("✗ Insufficient balance - Current: {}, Required: {}", wallet.getBalance(), request.getAmount());
 			throw new RuntimeException("Insufficient balance");
 		}
+
+		logger.info("✓ Balance check passed");
 
 		Transaction transaction = new Transaction();
 		transaction.setTransactionId(generateTransactionId());
@@ -115,8 +123,8 @@ public class TransactionService {
 		transaction.setDescription("Payment via ASM POS");
 		transaction.setBalanceBefore(wallet.getBalance());
 		transaction.setBarcodeData(request.getBarcodeData());
-		transaction.setMerchantId(request.getMerchantId());
-		transaction.setMerchantName(request.getMerchantName());
+		transaction.setMerchantId(request.getMerchantId() != null ? request.getMerchantId() : "UNKNOWN");
+		transaction.setMerchantName(request.getMerchantName() != null ? request.getMerchantName() : "Unknown Merchant");
 		transaction.setPosTerminalId(request.getPosTerminalId());
 		transaction.setCompletedAt(LocalDateTime.now());
 
@@ -124,9 +132,34 @@ public class TransactionService {
 		wallet.setBalance(wallet.getBalance() - request.getAmount());
 		walletRepository.save(wallet);
 
+		logger.info("✓ Wallet balance updated - New balance: {}", wallet.getBalance());
+
 		transaction.setBalanceAfter(wallet.getBalance());
 
 		Transaction completedTransaction = transactionRepository.save(transaction);
+
+		logger.info("✓ Transaction saved - ID: {}", completedTransaction.getTransactionId());
+
+		TransactionNotification notification = new TransactionNotification(
+				completedTransaction.getTransactionId(),
+				completedTransaction.getCompletedAt(),
+				completedTransaction.getMerchantName() != null ? completedTransaction.getMerchantName() : "Unknown Merchant",
+				completedTransaction.getAmount()
+		);
+
+		String userEmail = wallet.getUser().getEmail();
+		logger.info("Attempting to send WebSocket notification to: {}", userEmail);
+
+		try {
+			notificationService.sendTransactionNotification(userEmail, notification);
+			logger.info("✓ Notification service called successfully");
+		} catch (Exception e) {
+			logger.error("✗ Failed to send notification: {}", e.getMessage(), e);
+		}
+
+		logger.info("========================================");
+		logger.info("PAYMENT PROCESSING COMPLETED");
+		logger.info("========================================");
 
 		return new TransactionResponse(completedTransaction);
 	}

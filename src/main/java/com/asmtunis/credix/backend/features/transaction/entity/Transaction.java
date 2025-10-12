@@ -78,7 +78,6 @@ public class Transaction {
 	public Transaction() {
 	}
 
-	// Getters and Setters
 	public Long getId() {
 		return id;
 	}

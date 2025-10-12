@@ -4,25 +4,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import java.time.LocalDateTime;
-
 public class ProcessPaymentRequest {
 	@NotBlank(message = "Barcode data is required")
 	private String barcodeData;
-
-	@NotNull(message = "Barcode expiry is required")
-	private LocalDateTime barcodeExpiry;
 
 	@NotNull(message = "Amount is required")
 	@Positive(message = "Amount must be positive")
 	private Double amount;
 
-	@NotBlank(message = "Merchant ID is required")
 	private String merchantId;
-
-	@NotBlank(message = "Merchant name is required")
 	private String merchantName;
-
 	private String posTerminalId;
 
 	public ProcessPaymentRequest() {}
@@ -33,14 +24,6 @@ public class ProcessPaymentRequest {
 
 	public void setBarcodeData(String barcodeData) {
 		this.barcodeData = barcodeData;
-	}
-
-	public LocalDateTime getBarcodeExpiry() {
-		return barcodeExpiry;
-	}
-
-	public void setBarcodeExpiry(LocalDateTime barcodeExpiry) {
-		this.barcodeExpiry = barcodeExpiry;
 	}
 
 	public Double getAmount() {

@@ -10,10 +10,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface WalletRepository extends JpaRepository<Wallet, UUID> {
-	// Keep email method for JWT authentication
+
 	Optional<Wallet> findByUserEmail(String email);
 
-	// Add ID-based methods
 	Optional<Wallet> findByUserId(UUID userId);
 
 	Optional<Wallet> findByTokenizedId(String tokenizedId);

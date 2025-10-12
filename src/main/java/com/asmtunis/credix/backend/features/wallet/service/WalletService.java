@@ -29,25 +29,21 @@ public class WalletService {
 	 * Create a new wallet for a user (ID-based)
 	 */
 	public WalletResponse createWallet(CreateWalletRequest request, String corporateEmail) {
-		// Check if wallet already exists for this user
+
 		if (walletRepository.existsByUserId(request.getUserId())) {
 			throw new RuntimeException("Wallet already exists for user ID: " + request.getUserId());
 		}
 
-		// Find the user by ID
 		User user = userRepository.findById(request.getUserId())
 				.orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
 
-		// Get the corporate user from JWT email
 		User corporate = userRepository.findByEmail(corporateEmail)
 				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
 
-		// Verify the user belongs to this corporate
 		if (user.getCorporate() == null || !user.getCorporate().getId().equals(corporate.getId())) {
 			throw new RuntimeException("Unauthorized: User doesn't belong to this corporate");
 		}
 
-		// Create and save the wallet
 		Wallet wallet = new Wallet();
 		wallet.setUser(user);
 		wallet.setTokenizedId(generateTokenizedId(user.getEmail()));
@@ -81,11 +77,10 @@ public class WalletService {
 	 */
 	@Transactional(readOnly = true)
 	public List<WalletResponse> getWalletsByCorporate(String corporateEmail) {
-		// Get corporate user
+
 		User corporate = userRepository.findByEmail(corporateEmail)
 				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
 
-		// Find wallets by corporate ID
 		List<Wallet> wallets = walletRepository.findByUserCorporateId(corporate.getId());
 		return wallets.stream()
 				.map(WalletResponse::new)
@@ -96,21 +91,18 @@ public class WalletService {
 	 * Add credit to a user's wallet (ID-based)
 	 */
 	public WalletResponse addCredit(AddCreditRequest request, String corporateEmail) {
-		// Find wallet by user ID
+
 		Wallet wallet = walletRepository.findByUserId(request.getUserId())
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + request.getUserId()));
 
-		// Get corporate user from JWT
 		User corporate = userRepository.findByEmail(corporateEmail)
 				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
 
-		// Verify corporate manages this user
 		if (wallet.getUser().getCorporate() == null ||
 				!wallet.getUser().getCorporate().getId().equals(corporate.getId())) {
 			throw new RuntimeException("Unauthorized: Corporate doesn't manage this user");
 		}
 
-		// Add credit to wallet
 		wallet.setBalance(wallet.getBalance() + request.getAmount());
 
 		Wallet savedWallet = walletRepository.save(wallet);
@@ -160,11 +152,9 @@ public class WalletService {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 
-		// Get corporate user from JWT
 		User corporate = userRepository.findByEmail(corporateEmail)
 				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
 
-		// Verify corporate manages this user
 		if (wallet.getUser().getCorporate() == null ||
 				!wallet.getUser().getCorporate().getId().equals(corporate.getId())) {
 			throw new RuntimeException("Unauthorized: Corporate doesn't manage this user");
@@ -200,18 +190,16 @@ public class WalletService {
 	 * Transfer credit between wallets (within same corporate)
 	 */
 	public void transferCredit(UUID fromUserId, UUID toUserId, Double amount, String corporateEmail) {
-		// Find both wallets
+
 		Wallet fromWallet = walletRepository.findByUserId(fromUserId)
 				.orElseThrow(() -> new RuntimeException("Source wallet not found for user ID: " + fromUserId));
 
 		Wallet toWallet = walletRepository.findByUserId(toUserId)
 				.orElseThrow(() -> new RuntimeException("Destination wallet not found for user ID: " + toUserId));
 
-		// Get corporate user
 		User corporate = userRepository.findByEmail(corporateEmail)
 				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
 
-		// Verify both users belong to the same corporate
 		if (fromWallet.getUser().getCorporate() == null ||
 				!fromWallet.getUser().getCorporate().getId().equals(corporate.getId()) ||
 				toWallet.getUser().getCorporate() == null ||
@@ -219,12 +207,10 @@ public class WalletService {
 			throw new RuntimeException("Unauthorized: Both users must belong to the same corporate");
 		}
 
-		// Check sufficient balance
 		if (fromWallet.getBalance() < amount) {
 			throw new RuntimeException("Insufficient balance in source wallet");
 		}
 
-		// Perform transfer
 		fromWallet.setBalance(fromWallet.getBalance() - amount);
 		toWallet.setBalance(toWallet.getBalance() + amount);
 
