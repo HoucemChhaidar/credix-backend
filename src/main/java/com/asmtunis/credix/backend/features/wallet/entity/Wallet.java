@@ -1,6 +1,6 @@
 package com.asmtunis.credix.backend.features.wallet.entity;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
+import com.asmtunis.credix.backend.features.user.entity.User;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;

@@ -1,8 +1,8 @@
 package com.asmtunis.credix.backend.features.auth.security;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
-import com.asmtunis.credix.backend.features.auth.repository.UserRepository;
 import com.asmtunis.credix.backend.features.auth.service.JwtService;
+import com.asmtunis.credix.backend.features.user.entity.User;
+import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

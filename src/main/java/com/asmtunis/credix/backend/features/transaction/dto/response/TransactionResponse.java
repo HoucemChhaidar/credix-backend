@@ -23,8 +23,7 @@ public class TransactionResponse {
 	private LocalDateTime createdAt;
 	private LocalDateTime completedAt;
 
-	public TransactionResponse() {
-	}
+	public TransactionResponse() {}
 
 	public TransactionResponse(Transaction transaction) {
 		this.id = transaction.getId();
@@ -34,8 +33,8 @@ public class TransactionResponse {
 		this.amount = transaction.getAmount();
 		this.status = transaction.getStatus();
 		this.type = transaction.getType();
-		this.merchantName = transaction.getMerchantName();
-		this.merchantId = transaction.getMerchantId();
+		this.merchantName = transaction.getMerchant() != null ? transaction.getMerchant().getName() : "Unknown Merchant";
+		this.merchantId = transaction.getMerchant() != null ? transaction.getMerchant().getMerchantId() : null;
 		this.description = transaction.getDescription();
 		this.failureReason = transaction.getFailureReason();
 		this.balanceBefore = transaction.getBalanceBefore();
@@ -44,6 +43,7 @@ public class TransactionResponse {
 		this.completedAt = transaction.getCompletedAt();
 	}
 
+	// Getters and Setters
 	public Long getId() {
 		return id;
 	}

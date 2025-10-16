@@ -1,7 +1,7 @@
 package com.asmtunis.credix.backend.features.wallet.service;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
-import com.asmtunis.credix.backend.features.auth.repository.UserRepository;
+import com.asmtunis.credix.backend.features.user.entity.User;
+import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import com.asmtunis.credix.backend.features.wallet.dto.request.AddCreditRequest;
 import com.asmtunis.credix.backend.features.wallet.dto.request.CreateWalletRequest;
 import com.asmtunis.credix.backend.features.wallet.dto.response.WalletResponse;
@@ -28,22 +28,24 @@ public class WalletService {
 	/**
 	 * Create a new wallet for a user (ID-based)
 	 */
-	public WalletResponse createWallet(CreateWalletRequest request, String corporateEmail) {
-
+	public WalletResponse createWallet(CreateWalletRequest request, String adminEmail) {
+		// Check if wallet already exists for this user
 		if (walletRepository.existsByUserId(request.getUserId())) {
 			throw new RuntimeException("Wallet already exists for user ID: " + request.getUserId());
 		}
 
+		// Find the user by ID
 		User user = userRepository.findById(request.getUserId())
 				.orElseThrow(() -> new RuntimeException("User not found with ID: " + request.getUserId()));
 
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		if (user.getCorporate() == null || !user.getCorporate().getId().equals(corporate.getId())) {
-			throw new RuntimeException("Unauthorized: User doesn't belong to this corporate");
+		if (user.getAdmin() == null || !user.getAdmin().getId().equals(admin.getId())) {
+			throw new RuntimeException("Unauthorized: User doesn't belong to this admin");
 		}
 
+		// Create and save the wallet
 		Wallet wallet = new Wallet();
 		wallet.setUser(user);
 		wallet.setTokenizedId(generateTokenizedId(user.getEmail()));
@@ -73,15 +75,14 @@ public class WalletService {
 	}
 
 	/**
-	 * Get all wallets managed by a corporate (using corporate email from JWT)
+	 * Get all wallets managed by an admin (using admin email from JWT)
 	 */
 	@Transactional(readOnly = true)
-	public List<WalletResponse> getWalletsByCorporate(String corporateEmail) {
+	public List<WalletResponse> getWalletsByAdmin(String adminEmail) {
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
-
-		List<Wallet> wallets = walletRepository.findByUserCorporateId(corporate.getId());
+		List<Wallet> wallets = walletRepository.findByUserAdminId(admin.getId());
 		return wallets.stream()
 				.map(WalletResponse::new)
 				.collect(Collectors.toList());
@@ -90,19 +91,20 @@ public class WalletService {
 	/**
 	 * Add credit to a user's wallet (ID-based)
 	 */
-	public WalletResponse addCredit(AddCreditRequest request, String corporateEmail) {
-
+	public WalletResponse addCredit(AddCreditRequest request, String adminEmail) {
+		// Find wallet by user ID
 		Wallet wallet = walletRepository.findByUserId(request.getUserId())
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + request.getUserId()));
 
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		if (wallet.getUser().getCorporate() == null ||
-				!wallet.getUser().getCorporate().getId().equals(corporate.getId())) {
-			throw new RuntimeException("Unauthorized: Corporate doesn't manage this user");
+		if (wallet.getUser().getAdmin() == null ||
+				!wallet.getUser().getAdmin().getId().equals(admin.getId())) {
+			throw new RuntimeException("Unauthorized: Admin doesn't manage this user");
 		}
 
+		// Add credit to wallet
 		wallet.setBalance(wallet.getBalance() + request.getAmount());
 
 		Wallet savedWallet = walletRepository.save(wallet);
@@ -148,16 +150,16 @@ public class WalletService {
 	/**
 	 * Activate/Deactivate wallet
 	 */
-	public WalletResponse toggleWalletStatus(UUID userId, Boolean isActive, String corporateEmail) {
+	public WalletResponse toggleWalletStatus(UUID userId, Boolean isActive, String adminEmail) {
 		Wallet wallet = walletRepository.findByUserId(userId)
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user ID: " + userId));
 
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		if (wallet.getUser().getCorporate() == null ||
-				!wallet.getUser().getCorporate().getId().equals(corporate.getId())) {
-			throw new RuntimeException("Unauthorized: Corporate doesn't manage this user");
+		if (wallet.getUser().getAdmin() == null ||
+				!wallet.getUser().getAdmin().getId().equals(admin.getId())) {
+			throw new RuntimeException("Unauthorized: Admin doesn't manage this user");
 		}
 
 		wallet.setIsActive(isActive);
@@ -187,30 +189,32 @@ public class WalletService {
 	}
 
 	/**
-	 * Transfer credit between wallets (within same corporate)
+	 * Transfer credit between wallets (within same admin)
 	 */
-	public void transferCredit(UUID fromUserId, UUID toUserId, Double amount, String corporateEmail) {
-
+	public void transferCredit(UUID fromUserId, UUID toUserId, Double amount, String adminEmail) {
+		// Find both wallets
 		Wallet fromWallet = walletRepository.findByUserId(fromUserId)
 				.orElseThrow(() -> new RuntimeException("Source wallet not found for user ID: " + fromUserId));
 
 		Wallet toWallet = walletRepository.findByUserId(toUserId)
 				.orElseThrow(() -> new RuntimeException("Destination wallet not found for user ID: " + toUserId));
 
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		if (fromWallet.getUser().getCorporate() == null ||
-				!fromWallet.getUser().getCorporate().getId().equals(corporate.getId()) ||
-				toWallet.getUser().getCorporate() == null ||
-				!toWallet.getUser().getCorporate().getId().equals(corporate.getId())) {
-			throw new RuntimeException("Unauthorized: Both users must belong to the same corporate");
+		if (fromWallet.getUser().getAdmin() == null ||
+				!fromWallet.getUser().getAdmin().getId().equals(admin.getId()) ||
+				toWallet.getUser().getAdmin() == null ||
+				!toWallet.getUser().getAdmin().getId().equals(admin.getId())) {
+			throw new RuntimeException("Unauthorized: Both users must belong to the same admin");
 		}
 
+		// Check sufficient balance
 		if (fromWallet.getBalance() < amount) {
 			throw new RuntimeException("Insufficient balance in source wallet");
 		}
 
+		// Perform transfer
 		fromWallet.setBalance(fromWallet.getBalance() - amount);
 		toWallet.setBalance(toWallet.getBalance() + amount);
 

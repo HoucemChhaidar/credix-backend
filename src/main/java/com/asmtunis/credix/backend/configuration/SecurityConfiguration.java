@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true) // Enable @PreAuthorize annotations
 public class SecurityConfiguration {
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
@@ -24,32 +24,38 @@ public class SecurityConfiguration {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.csrf(AbstractHttpConfigurer::disable)
 				.authorizeHttpRequests(auth -> auth
-
+						// Public endpoints
 						.requestMatchers("/auth/**").permitAll()
-						.requestMatchers("/api/wallets/tokenized/**").permitAll()
+						.requestMatchers("/api/wallets/tokenized/**").permitAll() // For barcode payments
 
 						.requestMatchers("/api/transactions/payment/process").permitAll()
 						.requestMatchers("/ws/**", "/ws-raw/**", "/ws-sockjs/**")
-						.permitAll()
+						.permitAll() // Explicitly allow all WebSocket endpoints
 
+						// Swagger endpoints
 						.requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
 
-						.requestMatchers("/admin/**").hasRole("ADMIN")
-						.requestMatchers("/api/wallets/active").hasRole("ADMIN")
+						// SUPER_ADMIN endpoints
+						.requestMatchers("/api/users/role/**").hasRole("SUPER_ADMIN")
 
-						.requestMatchers("/api/wallets").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/user/**").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/corporate").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/add-credit").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/balance/**").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/toggle-status/**").hasRole("CORPORATE")
-						.requestMatchers("/api/wallets/transfer").hasRole("CORPORATE")
+						// ADMIN and SUPER_ADMIN endpoints
+						.requestMatchers("/api/users/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/active").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/user/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/add-credit").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/balance/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/toggle-status/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/transfer").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
+						// Vendor endpoints (for payment processing)
 						.requestMatchers("/api/wallets/deduct/**").hasAnyRole("VENDOR", "ADMIN")
 
-						.requestMatchers("/api/wallets/my-wallet").hasAnyRole("USER", "VENDOR", "ADMIN")
-						.requestMatchers("/api/wallets/my-balance").hasAnyRole("USER", "VENDOR", "ADMIN")
+						// User endpoints (own wallet access)
+						.requestMatchers("/api/wallets/my-wallet").hasAnyRole("USER", "ADMIN", "SUPER_ADMIN")
+						.requestMatchers("/api/wallets/my-balance").hasAnyRole("USER", "ADMIN", "SUPER_ADMIN")
 
+						// All other requests require authentication
 						.anyRequest().authenticated()
 				)
 				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

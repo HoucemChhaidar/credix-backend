@@ -1,7 +1,7 @@
 package com.asmtunis.credix.backend.features.auth.dto.response;
 
-import com.asmtunis.credix.backend.features.auth.entity.Role;
-import com.asmtunis.credix.backend.features.auth.entity.User;
+import com.asmtunis.credix.backend.features.user.entity.Role;
+import com.asmtunis.credix.backend.features.user.entity.User;
 
 public class UserResponse {
 	private String email;

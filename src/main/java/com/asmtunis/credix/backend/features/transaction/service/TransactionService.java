@@ -1,7 +1,7 @@
 package com.asmtunis.credix.backend.features.transaction.service;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
-import com.asmtunis.credix.backend.features.auth.repository.UserRepository;
+import com.asmtunis.credix.backend.features.merchant.entity.Merchant;
+import com.asmtunis.credix.backend.features.merchant.repository.MerchantRepository;
 import com.asmtunis.credix.backend.features.transaction.dto.request.GenerateBarcodeRequest;
 import com.asmtunis.credix.backend.features.transaction.dto.request.ProcessPaymentRequest;
 import com.asmtunis.credix.backend.features.transaction.dto.response.BarcodeResponse;
@@ -11,12 +11,14 @@ import com.asmtunis.credix.backend.features.transaction.entity.Transaction;
 import com.asmtunis.credix.backend.features.transaction.entity.TransactionStatus;
 import com.asmtunis.credix.backend.features.transaction.entity.TransactionType;
 import com.asmtunis.credix.backend.features.transaction.repository.TransactionRepository;
+import com.asmtunis.credix.backend.features.user.entity.User;
+import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
 import com.asmtunis.credix.backend.features.wallet.repository.WalletRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +34,7 @@ public class TransactionService {
 	private final TransactionRepository transactionRepository;
 	private final WalletRepository walletRepository;
 	private final UserRepository userRepository;
+	private final MerchantRepository merchantRepository;
 	private final BarcodeService barcodeService;
 	private final WebSocketNotificationService notificationService;
 
@@ -39,12 +42,14 @@ public class TransactionService {
 			TransactionRepository transactionRepository,
 			WalletRepository walletRepository,
 			UserRepository userRepository,
+			MerchantRepository merchantRepository,
 			BarcodeService barcodeService,
 			WebSocketNotificationService notificationService
 	) {
 		this.transactionRepository = transactionRepository;
 		this.walletRepository = walletRepository;
 		this.userRepository = userRepository;
+		this.merchantRepository = merchantRepository;
 		this.barcodeService = barcodeService;
 		this.notificationService = notificationService;
 	}
@@ -113,18 +118,27 @@ public class TransactionService {
 
 		logger.info("✓ Balance check passed");
 
+		Merchant merchant = null;
+		String merchantName = "Unknown Merchant";
+		if (request.getMerchantId() != null && !request.getMerchantId().isEmpty()) {
+			merchant = merchantRepository.findByMerchantId(request.getMerchantId()).orElse(null);
+			if (merchant != null) {
+				merchantName = merchant.getName();
+				logger.info("✓ Merchant found: {}", merchantName);
+			}
+		}
+
 		Transaction transaction = new Transaction();
 		transaction.setTransactionId(generateTransactionId());
 		transaction.setUser(wallet.getUser());
 		transaction.setWallet(wallet);
+		transaction.setMerchant(merchant);
 		transaction.setAmount(request.getAmount());
 		transaction.setStatus(TransactionStatus.COMPLETED);
 		transaction.setType(TransactionType.PAYMENT);
 		transaction.setDescription("Payment via ASM POS");
 		transaction.setBalanceBefore(wallet.getBalance());
 		transaction.setBarcodeData(request.getBarcodeData());
-		transaction.setMerchantId(request.getMerchantId() != null ? request.getMerchantId() : "UNKNOWN");
-		transaction.setMerchantName(request.getMerchantName() != null ? request.getMerchantName() : "Unknown Merchant");
 		transaction.setPosTerminalId(request.getPosTerminalId());
 		transaction.setCompletedAt(LocalDateTime.now());
 
@@ -143,7 +157,7 @@ public class TransactionService {
 		TransactionNotification notification = new TransactionNotification(
 				completedTransaction.getTransactionId(),
 				completedTransaction.getCompletedAt(),
-				completedTransaction.getMerchantName() != null ? completedTransaction.getMerchantName() : "Unknown Merchant",
+				merchantName,
 				completedTransaction.getAmount()
 		);
 

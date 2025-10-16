@@ -23,6 +23,7 @@ public class BarcodeService {
 		long timestamp = System.currentTimeMillis();
 		String randomToken = generateRandomToken();
 
+		// Format: ASM-PAY|walletId|timestamp|randomToken
 		String barcodeData = String.format("%s|%s|%d|%s",
 				BARCODE_PREFIX,
 				walletTokenId,
@@ -30,6 +31,7 @@ public class BarcodeService {
 				randomToken
 		);
 
+		// Encode to Base64 for Code128 compatibility
 		return Base64.getEncoder().encodeToString(barcodeData.getBytes());
 	}
 
@@ -41,20 +43,27 @@ public class BarcodeService {
 			return false;
 		}
 
+		// Check if barcode has expired
 		if (LocalDateTime.now().isAfter(barcodeExpiry)) {
 			return false;
 		}
 
 		try {
-
+			// Decode and validate format
 			String decoded = new String(Base64.getDecoder().decode(barcodeData));
 			String[] parts = decoded.split("\\|");
 
+			// Must have 4 parts: prefix|walletId|timestamp|randomToken
 			if (parts.length != 4) {
 				return false;
 			}
 
-			return BARCODE_PREFIX.equals(parts[0]);
+			// Validate prefix
+			if (!BARCODE_PREFIX.equals(parts[0])) {
+				return false;
+			}
+
+			return true;
 		} catch (Exception e) {
 			return false;
 		}
@@ -69,7 +78,7 @@ public class BarcodeService {
 			String[] parts = decoded.split("\\|");
 
 			if (parts.length >= 2) {
-				return parts[1];
+				return parts[1]; // Wallet token ID is the second part
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Invalid barcode format");
@@ -88,7 +97,7 @@ public class BarcodeService {
 			String[] parts = decoded.split("\\|");
 
 			if (parts.length >= 3) {
-				long timestamp = Long.parseLong(parts[2]);
+				long timestamp = Long.parseLong(parts[2]); // Timestamp is the third part
 				LocalDateTime generatedAt = LocalDateTime.ofInstant(
 						Instant.ofEpochMilli(timestamp),
 						ZoneId.systemDefault()

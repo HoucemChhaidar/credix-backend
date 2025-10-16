@@ -2,9 +2,9 @@ package com.asmtunis.credix.backend.features.transaction.service;
 
 import com.asmtunis.credix.backend.features.transaction.dto.response.TransactionNotification;
 import com.asmtunis.credix.backend.features.transaction.websocket.TransactionWebSocketHandler;
-import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 @Service
 public class WebSocketNotificationService {
@@ -23,7 +23,7 @@ public class WebSocketNotificationService {
 	public void sendTransactionNotification(String userEmail, TransactionNotification notification) {
 		try {
 			logger.info("[Notification] Sending to user: {}", userEmail);
-			logger.info("[Notification] Transaction ID: {}, Amount: {}, Status: {}",
+			logger.info("[Notification] Transaction ID: {}, Amount: {}",
 					notification.transactionId(),
 					notification.amount());
 

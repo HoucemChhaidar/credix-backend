@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 
 public record TransactionNotification(
 		String transactionId,
-		LocalDateTime timestamp,
+		LocalDateTime date,
 		String merchantName,
 		Double amount
-) {}
+) {
+}

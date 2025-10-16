@@ -1,7 +1,6 @@
-
 package com.asmtunis.credix.backend.features.auth.service;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
+import com.asmtunis.credix.backend.features.user.entity.User;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;

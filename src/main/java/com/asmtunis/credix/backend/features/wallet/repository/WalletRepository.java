@@ -10,9 +10,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface WalletRepository extends JpaRepository<Wallet, UUID> {
-
+	// Keep email method for JWT authentication
 	Optional<Wallet> findByUserEmail(String email);
 
+	// Add ID-based methods
 	Optional<Wallet> findByUserId(UUID userId);
 
 	Optional<Wallet> findByTokenizedId(String tokenizedId);
@@ -21,6 +22,6 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
 	boolean existsByUserId(UUID userId);
 
-	@Query("SELECT w FROM Wallet w WHERE w.user.corporate.id = :corporateId")
-	List<Wallet> findByUserCorporateId(@Param("corporateId") UUID corporateId);
+	@Query("SELECT w FROM Wallet w WHERE w.user.admin.id = :adminId")
+	List<Wallet> findByUserAdminId(@Param("adminId") UUID adminId);
 }

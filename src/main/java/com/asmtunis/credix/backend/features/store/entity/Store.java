@@ -26,9 +26,6 @@ public class Store {
 	private Merchant merchant;
 
 	@Column(nullable = false)
-	private String description;
-
-	@Column(nullable = false)
 	private String address;
 
 	@Column(nullable = false)
@@ -140,13 +137,5 @@ public class Store {
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
-	}
-
-	public String getDescription() {
-		return description;
-	}
-
-	public void setDescription(String description) {
-		this.description = description;
 	}
 }

@@ -1,6 +1,7 @@
 package com.asmtunis.credix.backend.features.transaction.entity;
 
-import com.asmtunis.credix.backend.features.auth.entity.User;
+import com.asmtunis.credix.backend.features.merchant.entity.Merchant;
+import com.asmtunis.credix.backend.features.user.entity.User;
 import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -26,6 +27,10 @@ public class Transaction {
 	@JoinColumn(name = "wallet_id", nullable = false)
 	private Wallet wallet;
 
+	@ManyToOne
+	@JoinColumn(name = "merchant_id")
+	private Merchant merchant;
+
 	@Column(nullable = false, scale = 3)
 	private Double amount;
 
@@ -42,12 +47,6 @@ public class Transaction {
 
 	@Column(name = "barcode_expiry")
 	private LocalDateTime barcodeExpiry;
-
-	@Column(name = "merchant_name")
-	private String merchantName;
-
-	@Column(name = "merchant_id")
-	private String merchantId;
 
 	@Column(name = "pos_terminal_id")
 	private String posTerminalId;
@@ -75,9 +74,9 @@ public class Transaction {
 	@Column(name = "completed_at")
 	private LocalDateTime completedAt;
 
-	public Transaction() {
-	}
+	public Transaction() {}
 
+	// Getters and Setters
 	public Long getId() {
 		return id;
 	}
@@ -108,6 +107,14 @@ public class Transaction {
 
 	public void setWallet(Wallet wallet) {
 		this.wallet = wallet;
+	}
+
+	public Merchant getMerchant() {
+		return merchant;
+	}
+
+	public void setMerchant(Merchant merchant) {
+		this.merchant = merchant;
 	}
 
 	public Double getAmount() {
@@ -148,22 +155,6 @@ public class Transaction {
 
 	public void setBarcodeExpiry(LocalDateTime barcodeExpiry) {
 		this.barcodeExpiry = barcodeExpiry;
-	}
-
-	public String getMerchantName() {
-		return merchantName;
-	}
-
-	public void setMerchantName(String merchantName) {
-		this.merchantName = merchantName;
-	}
-
-	public String getMerchantId() {
-		return merchantId;
-	}
-
-	public void setMerchantId(String merchantId) {
-		this.merchantId = merchantId;
 	}
 
 	public String getPosTerminalId() {

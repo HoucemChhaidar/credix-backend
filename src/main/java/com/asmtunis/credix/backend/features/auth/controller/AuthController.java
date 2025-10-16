@@ -1,11 +1,9 @@
 package com.asmtunis.credix.backend.features.auth.controller;
 
-import com.asmtunis.credix.backend.features.auth.dto.request.LoginRequest;
-import com.asmtunis.credix.backend.features.auth.dto.request.RegisterRequest;
-import com.asmtunis.credix.backend.features.auth.dto.response.AuthResponse;
-import com.asmtunis.credix.backend.features.auth.dto.response.UserResponse;
-import com.asmtunis.credix.backend.features.auth.service.AuthService;
 import com.asmtunis.credix.backend.common.dto.ResponseWrapper;
+import com.asmtunis.credix.backend.features.auth.dto.request.LoginRequest;
+import com.asmtunis.credix.backend.features.auth.dto.response.AuthResponse;
+import com.asmtunis.credix.backend.features.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,39 +17,12 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Authentication", description = "User authentication and registration endpoints")
+@Tag(name = "Authentication", description = "User authentication endpoints")
 public class AuthController {
 	private final AuthService authService;
 
 	public AuthController(AuthService authService) {
 		this.authService = authService;
-	}
-
-	@PostMapping("/register")
-	@Operation(summary = "Register a new user", description = "Create a new user account with email, password, and role")
-	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "User registered successfully",
-					content = @Content(schema = @Schema(implementation = ResponseWrapper.class))),
-			@ApiResponse(responseCode = "400", description = "Email already taken or validation error",
-					content = @Content(schema = @Schema(implementation = ResponseWrapper.class)))
-	})
-	public ResponseEntity<ResponseWrapper<UserResponse>> register(@Valid @RequestBody RegisterRequest request) {
-		if (authService.isEmailTaken(request.getEmail())) {
-			ResponseWrapper<UserResponse> response = new ResponseWrapper<>(
-					HttpStatus.BAD_REQUEST.value(),
-					"Email already taken.",
-					null
-			);
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-		}
-
-		UserResponse userResponse = authService.register(request);
-		ResponseWrapper<UserResponse> response = new ResponseWrapper<>(
-				HttpStatus.OK.value(),
-				"User registered successfully!",
-				userResponse
-		);
-		return ResponseEntity.ok(response);
 	}
 
 	@PostMapping("/login")

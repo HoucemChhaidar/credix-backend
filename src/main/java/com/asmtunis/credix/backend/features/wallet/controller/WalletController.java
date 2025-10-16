@@ -105,7 +105,7 @@ import java.util.UUID;
 	) {
 		try {
 			String corporateEmail = authentication.getName();
-			List<WalletResponse> wallets = walletService.getWalletsByCorporate(corporateEmail);
+			List<WalletResponse> wallets = walletService.getWalletsByAdmin(corporateEmail);
 
 			ResponseWrapper<List<WalletResponse>> response = new ResponseWrapper<>(HttpStatus.OK.value(), "Wallets retrieved successfully", wallets);
 			return ResponseEntity.ok(response);

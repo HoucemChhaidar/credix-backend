@@ -47,7 +47,6 @@ public class StoreService {
 				store.getName(),
 				store.getStoreType(),
 				store.getMerchant().getName(),
-				store.getDescription(),
 				store.getAddress(),
 				store.getLatitude(),
 				store.getLongitude(),
