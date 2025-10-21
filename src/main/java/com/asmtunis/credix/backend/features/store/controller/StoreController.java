@@ -38,7 +38,7 @@ public class StoreController {
 		));
 	}
 
-	@GetMapping("/type/{storeType}")
+	@GetMapping("/type/{type}")
 	@Operation(summary = "Get stores by type", description = "Retrieve stores filtered by their type (RETAIL, RESTAURANT, CAFE, CLOTHING, etc.)")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Stores retrieved successfully"),
@@ -46,9 +46,9 @@ public class StoreController {
 	})
 	public ResponseEntity<ResponseWrapper<List<StoreResponse>>> getStoresByType(
 			@Parameter(description = "Type of store (RETAIL, RESTAURANT, CAFE, CLOTHING, GROCERY, PHARMACY, BOOKSTORE, GAS_STATION, ELECTRONICS, OTHER)", required = true)
-			@PathVariable StoreType storeType
+			@PathVariable StoreType type
 	) {
-		List<StoreResponse> stores = storeService.getStoresByType(storeType);
+		List<StoreResponse> stores = storeService.getStoresByType(type);
 		return ResponseEntity.ok(new ResponseWrapper<>(
 				200,
 				"Stores retrieved successfully",

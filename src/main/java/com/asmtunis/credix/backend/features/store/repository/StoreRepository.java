@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface StoreRepository extends JpaRepository<Store, Long> {
-	List<Store> findByStoreTypeAndActiveTrue(StoreType storeType);
+	List<Store> findByTypeAndActiveTrue(StoreType type);
 
 	List<Store> findByActiveTrue();
 

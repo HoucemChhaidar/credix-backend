@@ -16,8 +16,8 @@ public class Store {
 	private String name;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "store_type", nullable = false)
-	private StoreType storeType;
+	@Column(name = "type", nullable = false)
+	private StoreType type;
 
 	@ManyToOne
 	@JoinColumn(name = "merchant_id", nullable = false)
@@ -25,6 +25,9 @@ public class Store {
 
 	@Column(nullable = false)
 	private String address;
+
+	@Column(columnDefinition = "TEXT")
+	private String description;
 
 	@Column(nullable = false)
 	private Double latitude;
@@ -73,12 +76,12 @@ public class Store {
 		this.name = name;
 	}
 
-	public StoreType getStoreType() {
-		return storeType;
+	public StoreType getType() {
+		return type;
 	}
 
-	public void setStoreType(StoreType storeType) {
-		this.storeType = storeType;
+	public void setType(StoreType storeType) {
+		this.type = storeType;
 	}
 
 	public Merchant getMerchant() {
@@ -95,6 +98,14 @@ public class Store {
 
 	public void setAddress(String address) {
 		this.address = address;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 
 	public Double getLatitude() {

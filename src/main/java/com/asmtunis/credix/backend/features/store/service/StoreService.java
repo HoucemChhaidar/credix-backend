@@ -23,8 +23,8 @@ public class StoreService {
 				.collect(Collectors.toList());
 	}
 
-	public List<StoreResponse> getStoresByType(StoreType storeType) {
-		return storeRepository.findByStoreTypeAndActiveTrue(storeType).stream()
+	public List<StoreResponse> getStoresByType(StoreType type) {
+		return storeRepository.findByTypeAndActiveTrue(type).stream()
 				.map(this::mapToResponse)
 				.collect(Collectors.toList());
 	}
@@ -45,7 +45,8 @@ public class StoreService {
 		return new StoreResponse(
 				store.getId(),
 				store.getName(),
-				store.getStoreType(),
+				store.getDescription(),
+				store.getType(),
 				store.getMerchant().getName(),
 				store.getAddress(),
 				store.getLatitude(),
