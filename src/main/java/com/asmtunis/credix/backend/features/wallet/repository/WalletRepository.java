@@ -18,7 +18,7 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
 	Optional<Wallet> findByTokenizedId(String tokenizedId);
 
-	List<Wallet> findByIsActiveTrue();
+	List<Wallet> findByActiveTrue();
 
 	boolean existsByUserId(UUID userId);
 

@@ -29,6 +29,20 @@ public class UserController {
 		this.userService = userService;
 	}
 
+	@PostMapping("/bootstrap")
+	@Operation(summary = "Bootstrap first SUPER_ADMIN", description = "Create the first SUPER_ADMIN user. Only works if no SUPER_ADMIN exists.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "201", description = "SUPER_ADMIN created successfully"),
+			@ApiResponse(responseCode = "400", description = "SUPER_ADMIN already exists or validation error")
+	})
+	public ResponseEntity<ResponseWrapper<UserListResponse>> bootstrapSuperAdmin(
+			@Valid @RequestBody CreateUserRequest request
+	) {
+		UserListResponse user = userService.bootstrapSuperAdmin(request);
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(new ResponseWrapper<>(201, "SUPER_ADMIN created successfully", user));
+	}
+
 	@PostMapping
 	@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
 	@Operation(summary = "Create new user", description = "Create a new user account. ADMIN can create USERs, SUPER_ADMIN can create ADMINs and USERs")

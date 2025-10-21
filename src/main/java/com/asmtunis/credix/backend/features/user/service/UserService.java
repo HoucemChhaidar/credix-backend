@@ -6,8 +6,9 @@ import com.asmtunis.credix.backend.features.user.dto.response.UserListResponse;
 import com.asmtunis.credix.backend.features.user.entity.Role;
 import com.asmtunis.credix.backend.features.user.entity.User;
 import com.asmtunis.credix.backend.features.user.repository.UserRepository;
-import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
-import com.asmtunis.credix.backend.features.wallet.repository.WalletRepository;
+import com.asmtunis.credix.backend.features.wallet.service.WalletService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,13 +20,44 @@ import java.util.stream.Collectors;
 @Service
 public class UserService {
 	private final UserRepository userRepository;
-	private final WalletRepository walletRepository;
+	private final WalletService walletService;
 	private final BCryptPasswordEncoder passwordEncoder;
 
-	public UserService(UserRepository userRepository, WalletRepository walletRepository) {
+	public UserService(UserRepository userRepository, WalletService walletService) {
 		this.userRepository = userRepository;
-		this.walletRepository = walletRepository;
+		this.walletService = walletService;
 		this.passwordEncoder = new BCryptPasswordEncoder();
+	}
+
+	@Transactional
+	public UserListResponse bootstrapSuperAdmin(CreateUserRequest request) {
+		// Check if any SUPER_ADMIN already exists
+		if (userRepository.findByRoleAndActiveTrue(Role.SUPER_ADMIN).stream().findAny().isPresent()) {
+			throw new RuntimeException("SUPER_ADMIN already exists. Use regular user creation endpoint.");
+		}
+
+		// Force role to SUPER_ADMIN
+		if (request.getRole() != Role.SUPER_ADMIN) {
+			throw new RuntimeException("Bootstrap endpoint only creates SUPER_ADMIN users");
+		}
+
+		if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+			throw new RuntimeException("Email already taken");
+		}
+
+		User newUser = new User();
+		newUser.setEmail(request.getEmail());
+		newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+		newUser.setRole(Role.SUPER_ADMIN);
+		newUser.setActive(true);
+		newUser.setFirstName(request.getFirstName());
+		newUser.setLastName(request.getLastName());
+		newUser.setPhoneNumber(request.getPhoneNumber());
+		newUser.setCompanyName(request.getCompanyName());
+		newUser.setProfileImageUrl(request.getProfileImageUrl());
+
+		User savedUser = userRepository.save(newUser);
+		return new UserListResponse(savedUser);
 	}
 
 	@Transactional
@@ -39,6 +71,11 @@ public class UserService {
 		newUser.setPassword(passwordEncoder.encode(request.getPassword()));
 		newUser.setRole(request.getRole());
 		newUser.setActive(true);
+		newUser.setFirstName(request.getFirstName());
+		newUser.setLastName(request.getLastName());
+		newUser.setPhoneNumber(request.getPhoneNumber());
+		newUser.setCompanyName(request.getCompanyName());
+		newUser.setProfileImageUrl(request.getProfileImageUrl());
 
 		if (request.getAdminId() != null) {
 			User admin = userRepository.findById(request.getAdminId())
@@ -58,20 +95,37 @@ public class UserService {
 		User savedUser = userRepository.save(newUser);
 
 		if (savedUser.getRole() == Role.USER) {
-			Wallet wallet = new Wallet();
-			wallet.setUser(savedUser);
-			wallet.setBalance(0.0);
-			wallet.setIsActive(true);
-			walletRepository.save(wallet);
+			walletService.createWalletForUser(savedUser);
 		}
 
 		return new UserListResponse(savedUser);
 	}
 
 	public List<UserListResponse> getAllUsers() {
-		return userRepository.findByActiveTrue().stream()
-				.map(UserListResponse::new)
-				.collect(Collectors.toList());
+		// Get authenticated user
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String authenticatedEmail = authentication.getName();
+
+		User authenticatedUser = userRepository.findByEmail(authenticatedEmail)
+				.orElseThrow(() -> new RuntimeException("Authenticated user not found"));
+
+		// Filter based on role
+		if (authenticatedUser.getRole() == Role.SUPER_ADMIN) {
+			// SUPER_ADMIN sees only their ADMINs
+			return userRepository.findByAdminAndActiveTrue(authenticatedUser).stream()
+					.filter(user -> user.getRole() == Role.ADMIN)
+					.map(UserListResponse::new)
+					.collect(Collectors.toList());
+		} else if (authenticatedUser.getRole() == Role.ADMIN) {
+			// ADMIN sees only their USERs
+			return userRepository.findByAdminAndActiveTrue(authenticatedUser).stream()
+					.filter(user -> user.getRole() == Role.USER)
+					.map(UserListResponse::new)
+					.collect(Collectors.toList());
+		}
+
+		// USER role shouldn't reach here due to @PreAuthorize, but return empty list as fallback
+		return List.of();
 	}
 
 	public UserListResponse getUserById(UUID id) {
@@ -108,6 +162,26 @@ public class UserService {
 
 		if (request.getRole() != null) {
 			user.setRole(request.getRole());
+		}
+
+		if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
+			user.setFirstName(request.getFirstName());
+		}
+
+		if (request.getLastName() != null && !request.getLastName().isEmpty()) {
+			user.setLastName(request.getLastName());
+		}
+
+		if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
+			user.setPhoneNumber(request.getPhoneNumber());
+		}
+
+		if (request.getCompanyName() != null) {
+			user.setCompanyName(request.getCompanyName());
+		}
+
+		if (request.getProfileImageUrl() != null) {
+			user.setProfileImageUrl(request.getProfileImageUrl());
 		}
 
 		User updatedUser = userRepository.save(user);

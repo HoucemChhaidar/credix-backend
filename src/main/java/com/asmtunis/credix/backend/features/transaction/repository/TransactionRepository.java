@@ -34,8 +34,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 	@Query("SELECT t FROM Transaction t WHERE t.wallet.id = :walletId ORDER BY t.createdAt DESC")
 	List<Transaction> findByWalletIdOrderByCreatedAtDesc(@Param("walletId") Long walletId);
 
-	@Query("SELECT t FROM Transaction t WHERE t.user.corporate.id = :corporateId ORDER BY t.createdAt DESC")
-	List<Transaction> findByCorporateIdOrderByCreatedAtDesc(@Param("corporateId") UUID corporateId);
+	@Query("SELECT t FROM Transaction t WHERE t.user.admin.id = :adminId ORDER BY t.createdAt DESC")
+	List<Transaction> findByAdminIdOrderByCreatedAtDesc(@Param("adminId") UUID adminId);
 
 	@Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.status = :status")
 	List<Transaction> findByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") TransactionStatus status);

@@ -1,8 +1,6 @@
 package com.asmtunis.credix.backend.features.user.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -27,17 +25,39 @@ public class User {
 	@Column(nullable = false)
 	private Boolean active = true;
 
+	@Column(nullable = false)
+	private String firstName;
+
+	@Column(nullable = false)
+	private String lastName;
+
+	@Column(nullable = false)
+	private String phoneNumber;
+
+	private String companyName;
+
+	private String profileImageUrl;
+
 	@ManyToOne
 	@JoinColumn(name = "admin_id")
 	private User admin;
 
-	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
 	public User() {}
+
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = LocalDateTime.now();
+	}
 
 	public UUID getId() {
 		return id;
@@ -77,6 +97,46 @@ public class User {
 
 	public void setActive(Boolean active) {
 		this.active = active;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public String getProfileImageUrl() {
+		return profileImageUrl;
+	}
+
+	public void setProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 
 	public User getAdmin() {

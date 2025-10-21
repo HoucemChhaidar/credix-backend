@@ -67,7 +67,7 @@ public class TransactionService {
 				.orElseThrow(() -> new RuntimeException("Wallet not found for user: " + userEmail));
 
 		// Check if wallet is active
-		if (!wallet.getIsActive()) {
+		if (!wallet.getActive()) {
 			throw new RuntimeException("Wallet is not active");
 		}
 
@@ -203,14 +203,14 @@ public class TransactionService {
 	}
 
 	/**
-	 * Get transaction history for all users under a corporate
+	 * Get transaction history for all users under an admin
 	 */
 	@Transactional(readOnly = true)
-	public List<TransactionResponse> getCorporateTransactionHistory(String corporateEmail) {
-		User corporate = userRepository.findByEmail(corporateEmail)
-				.orElseThrow(() -> new RuntimeException("Corporate not found: " + corporateEmail));
+	public List<TransactionResponse> getAdminTransactionHistory(String adminEmail) {
+		User admin = userRepository.findByEmail(adminEmail)
+				.orElseThrow(() -> new RuntimeException("Admin not found: " + adminEmail));
 
-		List<Transaction> transactions = transactionRepository.findByCorporateIdOrderByCreatedAtDesc(corporate.getId());
+		List<Transaction> transactions = transactionRepository.findByAdminIdOrderByCreatedAtDesc(admin.getId());
 		return transactions.stream()
 				.map(TransactionResponse::new)
 				.collect(Collectors.toList());

@@ -162,7 +162,7 @@ public class WalletService {
 			throw new RuntimeException("Unauthorized: Admin doesn't manage this user");
 		}
 
-		wallet.setIsActive(isActive);
+		wallet.setActive(isActive);
 		Wallet savedWallet = walletRepository.save(wallet);
 		return new WalletResponse(savedWallet);
 	}
@@ -182,7 +182,7 @@ public class WalletService {
 	 */
 	@Transactional(readOnly = true)
 	public List<WalletResponse> getAllActiveWallets() {
-		List<Wallet> wallets = walletRepository.findByIsActiveTrue();
+		List<Wallet> wallets = walletRepository.findByActiveTrue();
 		return wallets.stream()
 				.map(WalletResponse::new)
 				.collect(Collectors.toList());
@@ -220,6 +220,25 @@ public class WalletService {
 
 		walletRepository.save(fromWallet);
 		walletRepository.save(toWallet);
+	}
+
+	/**
+	 * Create wallet for a newly registered user (internal use only)
+	 * This method is called by UserService during user registration
+	 */
+	public Wallet createWalletForUser(User user) {
+		// Check if wallet already exists
+		if (walletRepository.existsByUserId(user.getId())) {
+			throw new RuntimeException("Wallet already exists for user: " + user.getEmail());
+		}
+
+		Wallet wallet = new Wallet();
+		wallet.setUser(user);
+		wallet.setBalance(0.0);
+		wallet.setActive(true);
+		wallet.setTokenizedId(generateTokenizedId(user.getEmail()));
+
+		return walletRepository.save(wallet);
 	}
 
 	/**

@@ -79,7 +79,7 @@ public class TransactionController {
 	}
 
 	@GetMapping("/{transactionId}")
-	@PreAuthorize("hasAnyRole('USER', 'CORPORATE')")
+	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 	@Operation(summary = "Get transaction by ID", description = "Retrieve transaction details by transaction ID")
 	public ResponseEntity<ResponseWrapper<TransactionResponse>> getTransaction(
 			@PathVariable String transactionId
@@ -125,18 +125,18 @@ public class TransactionController {
 		}
 	}
 
-	@GetMapping("/corporate/history")
-	@PreAuthorize("hasAuthority('CORPORATE')")
-	@Operation(summary = "Get corporate transaction history", description = "Get all transactions for users under the corporate")
-	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getCorporateHistory(
+	@GetMapping("/admin/history")
+	@PreAuthorize("hasAuthority('ADMIN')")
+	@Operation(summary = "Get admin transaction history", description = "Get all transactions for users under the admin")
+	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getAdminHistory(
 			Authentication authentication
 	) {
 		try {
-			String corporateEmail = authentication.getName();
-			List<TransactionResponse> response = transactionService.getCorporateTransactionHistory(corporateEmail);
+			String adminEmail = authentication.getName();
+			List<TransactionResponse> response = transactionService.getAdminTransactionHistory(adminEmail);
 			return ResponseEntity.ok(new ResponseWrapper<>(
 					org.springframework.http.HttpStatus.OK.value(),
-					"Corporate transaction history retrieved successfully",
+					"Admin transaction history retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {
@@ -150,7 +150,7 @@ public class TransactionController {
 	}
 
 	@GetMapping("/date-range")
-	@PreAuthorize("hasAuthority('CORPORATE')")
+	@PreAuthorize("hasAuthority('ADMIN')")
 	@Operation(summary = "Get transactions by date range", description = "Retrieve transactions within a specific date range")
 	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getTransactionsByDateRange(
 			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,

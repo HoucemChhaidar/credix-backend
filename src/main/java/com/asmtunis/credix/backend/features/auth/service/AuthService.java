@@ -2,6 +2,7 @@ package com.asmtunis.credix.backend.features.auth.service;
 
 import com.asmtunis.credix.backend.features.auth.dto.request.LoginRequest;
 import com.asmtunis.credix.backend.features.auth.dto.response.AuthResponse;
+import com.asmtunis.credix.backend.features.user.entity.User;
 import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ public class AuthService {
 
 	public Optional<AuthResponse> login(LoginRequest request) {
 		return userRepository.findByEmail(request.getEmail())
+				.filter(User::getActive)
 				.filter(user -> passwordEncoder.matches(request.getPassword(), user.getPassword()))
 				.map(user -> new AuthResponse(jwtService.generateToken(user)));
 	}

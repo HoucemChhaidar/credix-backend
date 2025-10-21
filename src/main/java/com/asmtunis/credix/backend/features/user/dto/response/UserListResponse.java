@@ -11,6 +11,11 @@ public class UserListResponse {
 	private String email;
 	private Role role;
 	private Boolean active;
+	private String firstName;
+	private String lastName;
+	private String phoneNumber;
+	private String companyName;
+	private String profileImageUrl;
 	private UUID adminId;
 	private String adminEmail;
 	private LocalDateTime createdAt;
@@ -21,6 +26,11 @@ public class UserListResponse {
 		this.email = user.getEmail();
 		this.role = user.getRole();
 		this.active = user.getActive();
+		this.firstName = user.getFirstName();
+		this.lastName = user.getLastName();
+		this.phoneNumber = user.getPhoneNumber();
+		this.companyName = user.getCompanyName();
+		this.profileImageUrl = user.getProfileImageUrl();
 		this.createdAt = user.getCreatedAt();
 		this.updatedAt = user.getUpdatedAt();
 
@@ -60,6 +70,46 @@ public class UserListResponse {
 
 	public void setActive(Boolean active) {
 		this.active = active;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public String getProfileImageUrl() {
+		return profileImageUrl;
+	}
+
+	public void setProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 
 	public UUID getAdminId() {

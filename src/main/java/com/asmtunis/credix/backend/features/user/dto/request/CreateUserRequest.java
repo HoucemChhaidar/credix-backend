@@ -18,6 +18,19 @@ public class CreateUserRequest {
 	@NotNull(message = "Role is required")
 	private Role role;
 
+	@NotBlank(message = "First name is required")
+	private String firstName;
+
+	@NotBlank(message = "Last name is required")
+	private String lastName;
+
+	@NotBlank(message = "Phone number is required")
+	private String phoneNumber;
+
+	private String companyName;
+
+	private String profileImageUrl;
+
 	private UUID adminId;
 
 	public String getEmail() {
@@ -42,6 +55,46 @@ public class CreateUserRequest {
 
 	public void setRole(Role role) {
 		this.role = role;
+	}
+
+	public String getFirstName() {
+		return firstName;
+	}
+
+	public void setFirstName(String firstName) {
+		this.firstName = firstName;
+	}
+
+	public String getLastName() {
+		return lastName;
+	}
+
+	public void setLastName(String lastName) {
+		this.lastName = lastName;
+	}
+
+	public String getPhoneNumber() {
+		return phoneNumber;
+	}
+
+	public void setPhoneNumber(String phoneNumber) {
+		this.phoneNumber = phoneNumber;
+	}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	public String getProfileImageUrl() {
+		return profileImageUrl;
+	}
+
+	public void setProfileImageUrl(String profileImageUrl) {
+		this.profileImageUrl = profileImageUrl;
 	}
 
 	public UUID getAdminId() {

@@ -25,7 +25,7 @@ public class SwaggerConfiguration {
 		return new OpenAPI()
 				.info(new Info()
 						.title("Credix Backend API")
-						.description("Corporate Credit Distribution System with Barcode Payments")
+						.description("Enterprise Credit Distribution System with Barcode Payments")
 						.version("1.0.0")
 						.contact(new Contact()
 								.name("ASM Tunis")

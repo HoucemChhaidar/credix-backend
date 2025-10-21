@@ -4,8 +4,6 @@ import com.asmtunis.credix.backend.features.merchant.entity.Merchant;
 import com.asmtunis.credix.backend.features.user.entity.User;
 import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -63,11 +61,9 @@ public class Transaction {
 	@Column(name = "balance_after", scale = 3)
 	private Double balanceAfter;
 
-	@CreationTimestamp
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
 
-	@UpdateTimestamp
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
@@ -76,7 +72,17 @@ public class Transaction {
 
 	public Transaction() {}
 
-	// Getters and Setters
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = LocalDateTime.now();
+	}
+
 	public Long getId() {
 		return id;
 	}

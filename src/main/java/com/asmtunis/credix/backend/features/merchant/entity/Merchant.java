@@ -1,8 +1,6 @@
 package com.asmtunis.credix.backend.features.merchant.entity;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -31,17 +29,25 @@ public class Merchant {
 	@Column(nullable = false)
 	private Boolean active = true;
 
-	@CreationTimestamp
 	@Column(name = "created_at")
 	private LocalDateTime createdAt;
 
-	@UpdateTimestamp
 	@Column(name = "updated_at")
 	private LocalDateTime updatedAt;
 
 	public Merchant() {}
 
-	// Getters and Setters
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = LocalDateTime.now();
+	}
+
 	public Long getId() {
 		return id;
 	}
