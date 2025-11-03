@@ -41,15 +41,12 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 	List<Transaction> findByUserIdAndStatus(@Param("userId") UUID userId, @Param("status") TransactionStatus status);
 
 	@Query("SELECT t FROM Transaction t WHERE t.createdAt BETWEEN :startDate AND :endDate ORDER BY t.createdAt DESC")
-	List<Transaction> findByDateRange(
-			@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
+	List<Transaction> findByDateRange(@Param("startDate") LocalDateTime startDate, @Param("endDate") LocalDateTime endDate);
 
 	@Query("SELECT t FROM Transaction t WHERE t.user.id = :userId AND t.createdAt BETWEEN :startDate AND :endDate ORDER BY t.createdAt DESC")
-	List<Transaction> findByUserIdAndDateRange(
-			@Param("userId") UUID userId,
-			@Param("startDate") LocalDateTime startDate,
-			@Param("endDate") LocalDateTime endDate
-	);
+	List<Transaction> findByUserIdAndDateRange(@Param("userId") UUID userId,
+																						 @Param("startDate") LocalDateTime startDate,
+																						 @Param("endDate") LocalDateTime endDate);
 
 	@Query("SELECT t FROM Transaction t WHERE t.barcodeExpiry < :now AND t.status = 'PENDING'")
 	List<Transaction> findExpiredPendingTransactions(@Param("now") LocalDateTime now);
@@ -59,4 +56,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
 	@Query("SELECT COUNT(t) FROM Transaction t WHERE t.user.id = :userId AND t.status = 'COMPLETED'")
 	Long getCompletedTransactionCountByUser(@Param("userId") UUID userId);
+
+	@Query("SELECT t FROM Transaction t WHERE t.user.admin.id = :adminId AND t.type = 'CREDIT_ADDITION' ORDER BY t.createdAt DESC")
+	List<Transaction> findCreditTransactionsByAdminId(@Param("adminId") UUID adminId);
 }

@@ -8,6 +8,7 @@ public class WalletResponse {
 	private String tokenizedId;
 	private Double balance;
 	private Boolean active;
+	private Double transferAmount;
 	private String userEmail;
 	private LocalDateTime createdAt;
 
@@ -17,6 +18,7 @@ public class WalletResponse {
 		this.tokenizedId = wallet.getTokenizedId();
 		this.balance = wallet.getBalance();
 		this.active = wallet.getActive();
+		this.transferAmount = wallet.getTransferAmount();
 		this.userEmail = wallet.getUser().getEmail();
 		this.createdAt = wallet.getCreatedAt();
 	}
@@ -32,6 +34,10 @@ public class WalletResponse {
 	public Boolean getActive() {return active;}
 
 	public void setActive(Boolean active) {this.active = active;}
+
+	public Double getTransferAmount() {return transferAmount;}
+
+	public void setTransferAmount(Double transferAmount) {this.transferAmount = transferAmount;}
 
 	public String getUserEmail() {return userEmail;}
 

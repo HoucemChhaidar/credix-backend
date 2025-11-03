@@ -2,6 +2,8 @@ package com.asmtunis.credix.backend.features.wallet.entity;
 
 import com.asmtunis.credix.backend.features.user.entity.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -21,6 +23,9 @@ public class Wallet {
 	@Column(name = "active", nullable = false)
 	private Boolean active = true;
 
+	@Column(name = "transfer_amount", nullable = false, scale = 3)
+	private Double transferAmount = 0.0;
+
 	@OneToOne
 	@JoinColumn(name = "user_id", nullable = false, unique = true)
 	private User user;
@@ -32,17 +37,6 @@ public class Wallet {
 	private LocalDateTime updatedAt;
 
 	public Wallet() {}
-
-	@PrePersist
-	protected void onCreate() {
-		createdAt = LocalDateTime.now();
-		updatedAt = LocalDateTime.now();
-	}
-
-	@PreUpdate
-	protected void onUpdate() {
-		updatedAt = LocalDateTime.now();
-	}
 
 	public Long getId() {
 		return id;
@@ -76,6 +70,14 @@ public class Wallet {
 		this.active = active;
 	}
 
+	public Double getTransferAmount() {
+		return transferAmount;
+	}
+
+	public void setTransferAmount(Double transferAmount) {
+		this.transferAmount = transferAmount;
+	}
+
 	public User getUser() {
 		return user;
 	}
@@ -98,5 +100,16 @@ public class Wallet {
 
 	public void setUpdatedAt(LocalDateTime updatedAt) {
 		this.updatedAt = updatedAt;
+	}
+
+	@PrePersist
+	protected void onCreate() {
+		createdAt = LocalDateTime.now();
+		updatedAt = LocalDateTime.now();
+	}
+
+	@PreUpdate
+	protected void onUpdate() {
+		updatedAt = LocalDateTime.now();
 	}
 }

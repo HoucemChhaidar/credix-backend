@@ -1,5 +1,7 @@
 package com.asmtunis.credix.backend.features.transaction.service;
 
+import com.asmtunis.credix.backend.features.user.entity.User;
+import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import com.asmtunis.credix.backend.features.merchant.entity.Merchant;
 import com.asmtunis.credix.backend.features.merchant.repository.MerchantRepository;
 import com.asmtunis.credix.backend.features.transaction.dto.request.GenerateBarcodeRequest;
@@ -11,14 +13,12 @@ import com.asmtunis.credix.backend.features.transaction.entity.Transaction;
 import com.asmtunis.credix.backend.features.transaction.entity.TransactionStatus;
 import com.asmtunis.credix.backend.features.transaction.entity.TransactionType;
 import com.asmtunis.credix.backend.features.transaction.repository.TransactionRepository;
-import com.asmtunis.credix.backend.features.user.entity.User;
-import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import com.asmtunis.credix.backend.features.wallet.entity.Wallet;
 import com.asmtunis.credix.backend.features.wallet.repository.WalletRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -38,14 +38,12 @@ public class TransactionService {
 	private final BarcodeService barcodeService;
 	private final WebSocketNotificationService notificationService;
 
-	public TransactionService(
-			TransactionRepository transactionRepository,
-			WalletRepository walletRepository,
-			UserRepository userRepository,
-			MerchantRepository merchantRepository,
-			BarcodeService barcodeService,
-			WebSocketNotificationService notificationService
-	) {
+	public TransactionService(TransactionRepository transactionRepository,
+														WalletRepository walletRepository,
+														UserRepository userRepository,
+														MerchantRepository merchantRepository,
+														BarcodeService barcodeService,
+														WebSocketNotificationService notificationService) {
 		this.transactionRepository = transactionRepository;
 		this.walletRepository = walletRepository;
 		this.userRepository = userRepository;
@@ -244,5 +242,16 @@ public class TransactionService {
 	 */
 	private String generateTransactionId() {
 		return "TXN-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+	}
+
+	@Transactional(readOnly = true)
+	public List<TransactionResponse> getCreditTransferHistory(String email) {
+		User user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new RuntimeException("User not found: " + email));
+
+		List<Transaction> transactions = transactionRepository.findCreditTransactionsByAdminId(user.getId());
+		return transactions.stream()
+				.map(TransactionResponse::new)
+				.collect(Collectors.toList());
 	}
 }

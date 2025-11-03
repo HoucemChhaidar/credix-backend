@@ -7,9 +7,9 @@ import com.asmtunis.credix.backend.features.user.entity.Role;
 import com.asmtunis.credix.backend.features.user.entity.User;
 import com.asmtunis.credix.backend.features.user.repository.UserRepository;
 import com.asmtunis.credix.backend.features.wallet.service.WalletService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -94,7 +94,7 @@ public class UserService {
 
 		User savedUser = userRepository.save(newUser);
 
-		if (savedUser.getRole() == Role.USER) {
+		if (savedUser.getRole() == Role.USER || savedUser.getRole() == Role.ADMIN) {
 			walletService.createWalletForUser(savedUser);
 		}
 
@@ -195,6 +195,8 @@ public class UserService {
 
 		user.setActive(false);
 		userRepository.save(user);
+
+		walletService.deactivateWalletByUserId(id);
 	}
 
 	public long getUserCount() {
@@ -214,5 +216,16 @@ public class UserService {
 		return userRepository.findByAdminAndActiveTrue(admin).stream()
 				.map(UserListResponse::new)
 				.collect(Collectors.toList());
+	}
+
+	public UserListResponse getCurrentUser(String email) {
+		User user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new RuntimeException("User not found"));
+
+		if (!user.getActive()) {
+			throw new RuntimeException("User is inactive");
+		}
+
+		return new UserListResponse(user);
 	}
 }

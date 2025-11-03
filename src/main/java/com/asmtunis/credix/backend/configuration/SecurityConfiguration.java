@@ -72,7 +72,7 @@ public class SecurityConfiguration {
 		CorsConfiguration configuration = new CorsConfiguration();
 
 		// Allow Angular frontend origin
-		configuration.setAllowedOrigins(List.of("http://localhost:*"));
+		configuration.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:54361"));
 
 		// Allow all HTTP methods
 		configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));

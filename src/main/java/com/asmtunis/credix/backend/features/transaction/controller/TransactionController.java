@@ -36,8 +36,7 @@ public class TransactionController {
 	@Operation(summary = "Generate time-bound barcode", description = "Generate a 30-second expiry barcode for payment")
 	public ResponseEntity<ResponseWrapper<BarcodeResponse>> generateBarcode(
 			@Valid @RequestBody GenerateBarcodeRequest request,
-			Authentication authentication
-	) {
+			Authentication authentication) {
 		try {
 			String userEmail = authentication.getName();
 			BarcodeResponse response = transactionService.generateBarcode(request, userEmail);
@@ -59,8 +58,7 @@ public class TransactionController {
 	@PostMapping("/payment/process")
 	@Operation(summary = "Process payment", description = "Process payment from POS terminal (ASM integration)")
 	public ResponseEntity<ResponseWrapper<TransactionResponse>> processPayment(
-			@Valid @RequestBody ProcessPaymentRequest request
-	) {
+			@Valid @RequestBody ProcessPaymentRequest request) {
 		try {
 			TransactionResponse response = transactionService.processPayment(request);
 			return ResponseEntity.ok(new ResponseWrapper<>(
@@ -82,8 +80,7 @@ public class TransactionController {
 	@PreAuthorize("hasAnyRole('USER', 'ADMIN')")
 	@Operation(summary = "Get transaction by ID", description = "Retrieve transaction details by transaction ID")
 	public ResponseEntity<ResponseWrapper<TransactionResponse>> getTransaction(
-			@PathVariable String transactionId
-	) {
+			@PathVariable String transactionId) {
 		try {
 			TransactionResponse response = transactionService.getTransactionById(transactionId);
 			return ResponseEntity.ok(new ResponseWrapper<>(
@@ -105,8 +102,7 @@ public class TransactionController {
 	@PreAuthorize("hasRole('USER')")
 	@Operation(summary = "Get user transaction history", description = "Get all transactions for the authenticated user")
 	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getUserHistory(
-			Authentication authentication
-	) {
+			Authentication authentication) {
 		try {
 			String userEmail = authentication.getName();
 			List<TransactionResponse> response = transactionService.getUserTransactionHistory(userEmail);
@@ -129,8 +125,7 @@ public class TransactionController {
 	@PreAuthorize("hasAuthority('ADMIN')")
 	@Operation(summary = "Get admin transaction history", description = "Get all transactions for users under the admin")
 	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getAdminHistory(
-			Authentication authentication
-	) {
+			Authentication authentication) {
 		try {
 			String adminEmail = authentication.getName();
 			List<TransactionResponse> response = transactionService.getAdminTransactionHistory(adminEmail);
@@ -154,13 +149,35 @@ public class TransactionController {
 	@Operation(summary = "Get transactions by date range", description = "Retrieve transactions within a specific date range")
 	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getTransactionsByDateRange(
 			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
-	) {
+			@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
 		try {
 			List<TransactionResponse> response = transactionService.getTransactionsByDateRange(startDate, endDate);
 			return ResponseEntity.ok(new ResponseWrapper<>(
 					org.springframework.http.HttpStatus.OK.value(),
 					"Transactions retrieved successfully",
+					response
+			));
+		} catch (RuntimeException e) {
+			return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+					.body(new ResponseWrapper<>(
+							org.springframework.http.HttpStatus.BAD_REQUEST.value(),
+							e.getMessage(),
+							null
+					));
+		}
+	}
+
+	@GetMapping("/credit-history")
+	@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+	@Operation(summary = "Get credit transfer history", description = "Get all credit transfers made by ADMIN to users or SUPER_ADMIN to admins")
+	public ResponseEntity<ResponseWrapper<List<TransactionResponse>>> getCreditHistory(
+			Authentication authentication) {
+		try {
+			String email = authentication.getName();
+			List<TransactionResponse> response = transactionService.getCreditTransferHistory(email);
+			return ResponseEntity.ok(new ResponseWrapper<>(
+					org.springframework.http.HttpStatus.OK.value(),
+					"Credit transfer history retrieved successfully",
 					response
 			));
 		} catch (RuntimeException e) {

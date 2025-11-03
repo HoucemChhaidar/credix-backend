@@ -2,7 +2,9 @@ package com.asmtunis.credix.backend.features.wallet.controller;
 
 import com.asmtunis.credix.backend.common.dto.ResponseWrapper;
 import com.asmtunis.credix.backend.features.wallet.dto.request.AddCreditRequest;
+import com.asmtunis.credix.backend.features.wallet.dto.request.AddCreditToAdminRequest;
 import com.asmtunis.credix.backend.features.wallet.dto.request.CreateWalletRequest;
+import com.asmtunis.credix.backend.features.wallet.dto.response.BulkTransferResponse;
 import com.asmtunis.credix.backend.features.wallet.dto.response.WalletResponse;
 import com.asmtunis.credix.backend.features.wallet.service.WalletService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -95,11 +97,13 @@ import java.util.UUID;
 	}
 
 	/**
-	 * Get all wallets managed by admin (ADMIN only)
+	 * Get all wallets managed by admin (ADMIN, SUPER_ADMIN)
+	 * ADMIN sees USER wallets, SUPER_ADMIN sees ADMIN wallets
 	 */
-	@GetMapping("/admin") @PreAuthorize("hasRole('ADMIN')")
-	@Operation(summary = "Get admin wallets", description = "Retrieve all wallets managed by the authenticated admin user.")
-	@ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Wallets retrieved successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))), @ApiResponse(responseCode = "403", description = "Access denied - Admin role required")})
+	@GetMapping("/admin")
+	@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN')")
+	@Operation(summary = "Get admin wallets", description = "Retrieve all wallets managed by the authenticated admin user. ADMIN sees USER wallets, SUPER_ADMIN sees ADMIN wallets.")
+	@ApiResponses(value = {@ApiResponse(responseCode = "200", description = "Wallets retrieved successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))), @ApiResponse(responseCode = "403", description = "Access denied - Admin or Super Admin role required")})
 	public ResponseEntity<ResponseWrapper<List<WalletResponse>>> getWalletsByAdmin(
 			Authentication authentication
 	) {
@@ -133,6 +137,42 @@ import java.util.UUID;
 			return ResponseEntity.ok(response);
 		} catch (RuntimeException e) {
 			ResponseWrapper<WalletResponse> errorResponse = new ResponseWrapper<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+		}
+	}
+
+	/**
+	 * Add credit to an admin's wallet (SUPER_ADMIN only)
+	 */
+	@PostMapping("/add-credit-to-admin")
+	@PreAuthorize("hasRole('SUPER_ADMIN')")
+	@Operation(summary = "Add credit to admin wallet", description = "Add credit to an admin's wallet. Only SUPER_ADMIN can add credit to admin wallets.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Credit added to admin successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid request or validation error"),
+			@ApiResponse(responseCode = "403", description = "Access denied - Super Admin role required"),
+			@ApiResponse(responseCode = "404", description = "Admin wallet not found")
+	})
+	public ResponseEntity<ResponseWrapper<WalletResponse>> addCreditToAdmin(
+			@Valid @RequestBody @Parameter(description = "Credit addition request containing wallet ID and amount") AddCreditToAdminRequest request,
+			Authentication authentication
+	) {
+		try {
+			String superAdminEmail = authentication.getName();
+			WalletResponse walletResponse = walletService.addCreditToAdmin(request, superAdminEmail);
+
+			ResponseWrapper<WalletResponse> response = new ResponseWrapper<>(
+					HttpStatus.OK.value(),
+					"Credit added to admin successfully",
+					walletResponse
+			);
+			return ResponseEntity.ok(response);
+		} catch (RuntimeException e) {
+			ResponseWrapper<WalletResponse> errorResponse = new ResponseWrapper<>(
+					HttpStatus.BAD_REQUEST.value(),
+					e.getMessage(),
+					null
+			);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 		}
 	}
@@ -280,6 +320,112 @@ import java.util.UUID;
 			return ResponseEntity.ok(response);
 		} catch (RuntimeException e) {
 			ResponseWrapper<String> errorResponse = new ResponseWrapper<>(HttpStatus.BAD_REQUEST.value(), e.getMessage(), null);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+		}
+	}
+
+	/**
+	 * Bulk transfer credit to all active users based on their wallet's transferAmount
+	 */
+	@PostMapping("/bulk-transfer")
+	@PreAuthorize("hasRole('ADMIN')")
+	@Operation(summary = "Bulk transfer credit", description = "Transfer credit to all active users based on their wallet's transfer amount. Each user receives the amount specified in their wallet.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Bulk transfer completed successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))),
+			@ApiResponse(responseCode = "400", description = "No active wallets with transfer amounts found"),
+			@ApiResponse(responseCode = "403", description = "Access denied - Admin role required")
+	})
+	public ResponseEntity<ResponseWrapper<BulkTransferResponse>> bulkTransferCredit(
+			Authentication authentication
+	) {
+		try {
+			String adminEmail = authentication.getName();
+			BulkTransferResponse response = walletService.bulkTransferCredit(adminEmail);
+
+			ResponseWrapper<BulkTransferResponse> wrapper = new ResponseWrapper<>(
+					HttpStatus.OK.value(),
+					"Bulk transfer completed successfully",
+					response
+			);
+			return ResponseEntity.ok(wrapper);
+		} catch (RuntimeException e) {
+			ResponseWrapper<BulkTransferResponse> errorResponse = new ResponseWrapper<>(
+					HttpStatus.BAD_REQUEST.value(),
+					e.getMessage(),
+					null
+			);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+		}
+	}
+
+	/**
+	 * Bulk transfer credit to all active ADMINs based on their wallet's transferAmount
+	 * Only SUPER_ADMIN can access this endpoint
+	 */
+	@PostMapping("/bulk-transfer-admins")
+	@PreAuthorize("hasRole('SUPER_ADMIN')")
+	@Operation(summary = "Bulk transfer credit to admins", description = "Transfer credit to all active admins based on their wallet's transfer amount. Each admin receives the amount specified in their wallet. Only SUPER_ADMIN can access this.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Bulk transfer to admins completed successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))),
+			@ApiResponse(responseCode = "400", description = "No active admin wallets with transfer amounts found"),
+			@ApiResponse(responseCode = "403", description = "Access denied - Super Admin role required")
+	})
+	public ResponseEntity<ResponseWrapper<BulkTransferResponse>> bulkTransferCreditToAdmins(
+			Authentication authentication
+	) {
+		try {
+			String superAdminEmail = authentication.getName();
+			BulkTransferResponse response = walletService.bulkTransferCreditToAdmins(superAdminEmail);
+
+			ResponseWrapper<BulkTransferResponse> wrapper = new ResponseWrapper<>(
+					HttpStatus.OK.value(),
+					"Bulk transfer to admins completed successfully",
+					response
+			);
+			return ResponseEntity.ok(wrapper);
+		} catch (RuntimeException e) {
+			ResponseWrapper<BulkTransferResponse> errorResponse = new ResponseWrapper<>(
+					HttpStatus.BAD_REQUEST.value(),
+					e.getMessage(),
+					null
+			);
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+		}
+	}
+
+	/**
+	 * Update wallet transfer amount (ADMIN only)
+	 */
+	@PutMapping("/transfer-amount/{userId}")
+	@PreAuthorize("hasRole('ADMIN')")
+	@Operation(summary = "Update transfer amount", description = "Update the transfer amount for a user's wallet. This amount will be used during bulk transfers.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Transfer amount updated successfully", content = @Content(schema = @Schema(implementation = ResponseWrapper.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid request"),
+			@ApiResponse(responseCode = "403", description = "Access denied - Admin role required"),
+			@ApiResponse(responseCode = "404", description = "Wallet not found")
+	})
+	public ResponseEntity<ResponseWrapper<WalletResponse>> updateTransferAmount(
+			@PathVariable @Parameter(description = "User ID to update transfer amount for", example = "123") UUID userId,
+			@RequestParam @Parameter(description = "New transfer amount", example = "100.00") Double transferAmount,
+			Authentication authentication
+	) {
+		try {
+			String adminEmail = authentication.getName();
+			WalletResponse walletResponse = walletService.updateTransferAmount(userId, transferAmount, adminEmail);
+
+			ResponseWrapper<WalletResponse> response = new ResponseWrapper<>(
+					HttpStatus.OK.value(),
+					"Transfer amount updated successfully",
+					walletResponse
+			);
+			return ResponseEntity.ok(response);
+		} catch (RuntimeException e) {
+			ResponseWrapper<WalletResponse> errorResponse = new ResponseWrapper<>(
+					HttpStatus.BAD_REQUEST.value(),
+					e.getMessage(),
+					null
+			);
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 		}
 	}

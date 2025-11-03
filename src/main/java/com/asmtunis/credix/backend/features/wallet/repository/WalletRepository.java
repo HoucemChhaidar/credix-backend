@@ -24,4 +24,10 @@ public interface WalletRepository extends JpaRepository<Wallet, UUID> {
 
 	@Query("SELECT w FROM Wallet w WHERE w.user.admin.id = :adminId")
 	List<Wallet> findByUserAdminId(@Param("adminId") UUID adminId);
+
+	@Query("SELECT w FROM Wallet w WHERE w.user.admin.id = :adminId AND w.active = true AND w.transferAmount > 0")
+	List<Wallet> findActiveWalletsWithTransferAmountByAdminId(@Param("adminId") UUID adminId);
+
+	@Query("SELECT w FROM Wallet w WHERE w.user.admin.id = :superAdminId AND w.user.role = 'ADMIN' AND w.active = true AND w.transferAmount > 0")
+	List<Wallet> findActiveAdminWalletsWithTransferAmountBySuperAdminId(@Param("superAdminId") UUID superAdminId);
 }

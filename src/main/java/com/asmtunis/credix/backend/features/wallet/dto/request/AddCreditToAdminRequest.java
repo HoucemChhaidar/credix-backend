@@ -3,11 +3,9 @@ package com.asmtunis.credix.backend.features.wallet.dto.request;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
-import java.util.UUID;
-
-public class AddCreditRequest {
-	@NotNull(message = "User ID is required")
-	private UUID userId;
+public class AddCreditToAdminRequest {
+	@NotNull(message = "Tokenized ID is required")
+	private String tokenizedId;
 
 	@NotNull(message = "Amount is required")
 	@Positive(message = "Amount must be positive")
@@ -15,12 +13,12 @@ public class AddCreditRequest {
 
 	private String description;
 
-	public UUID getUserId() {
-		return userId;
+	public String getTokenizedId() {
+		return tokenizedId;
 	}
 
-	public void setUserId(UUID userId) {
-		this.userId = userId;
+	public void setTokenizedId(String tokenizedId) {
+		this.tokenizedId = tokenizedId;
 	}
 
 	public Double getAmount() {
