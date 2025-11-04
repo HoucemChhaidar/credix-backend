@@ -10,6 +10,9 @@ public class WalletResponse {
 	private Boolean active;
 	private Double transferAmount;
 	private String userEmail;
+	private String firstName;
+	private String lastName;
+	private String companyName;
 	private LocalDateTime createdAt;
 
 	public WalletResponse() {}
@@ -20,6 +23,9 @@ public class WalletResponse {
 		this.active = wallet.getActive();
 		this.transferAmount = wallet.getTransferAmount();
 		this.userEmail = wallet.getUser().getEmail();
+		this.firstName = wallet.getUser().getFirstName();
+		this.lastName = wallet.getUser().getLastName();
+		this.companyName = wallet.getUser().getCompanyName();
 		this.createdAt = wallet.getCreatedAt();
 	}
 
@@ -43,7 +49,23 @@ public class WalletResponse {
 
 	public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
 
+	public String getFirstName() {return firstName;}
+
+	public void setFirstName(String firstName) {this.firstName = firstName;}
+
+	public String getLastName() {return lastName;}
+
+	public void setLastName(String lastName) {this.lastName = lastName;}
+
 	public LocalDateTime getCreatedAt() {return createdAt;}
 
 	public void setCreatedAt(LocalDateTime createdAt) {this.createdAt = createdAt;}
+
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
 }
